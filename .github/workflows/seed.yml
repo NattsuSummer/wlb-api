@@ -1,7 +1,7 @@
 name: Seed database (one time)
 
 # Manual only. Seed data and the starting password live in repo secrets, never in the code:
-#   SEED_DATA_B64  — base64 of seed/seed.json (made by scripts/excel-to-seed.py)
+#   SEED_DATA_B64  — gzip + base64 of seed/seed.json:  gzip -9 -c seed/seed.json | base64 -w0
 #   SEED_PASSWORD  — starting password; every seeded user must change it on first login
 on:
   workflow_dispatch:
@@ -25,7 +25,7 @@ jobs:
       - run: npx wrangler d1 migrations apply DB --remote
       - name: Build seed SQL
         run: |
-          echo "$SEED_DATA_B64" | base64 -d > seed/seed.json
+          echo "$SEED_DATA_B64" | base64 -d | gunzip > seed/seed.json
           npx tsx scripts/build-seed-sql.ts seed/seed.json > seed/seed.sql
           grep -c '^INSERT' seed/seed.sql
       - run: npx wrangler d1 execute DB --remote --file seed/seed.sql

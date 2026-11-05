@@ -64,5 +64,5 @@ npm run dev         # wrangler dev (ต้อง migrate local ก่อน: npm
 repo เป็น public ข้อมูลตารางจริงกับรหัสเริ่มต้นจึงเก็บเป็น secret ไม่อยู่ในโค้ด:
 
 1. `python3 scripts/excel-to-seed.py <ไฟล์.xlsx>` → `seed/seed.json` (git ignore ไว้แล้ว) · ตัวอย่างโครงสร้าง: `seed/seed.example.json`
-2. ตั้ง secret `SEED_DATA_B64` = `base64 -w0 seed/seed.json` และ `SEED_PASSWORD` = รหัสเริ่มต้น
+2. ตั้ง secret `SEED_DATA_B64` = `gzip -9 -c seed/seed.json | base64 -w0` และ `SEED_PASSWORD` = รหัสเริ่มต้น
 3. Actions → **Seed database (one time)** → Run workflow · รันซ้ำได้ ไม่ทับข้อมูลเดิม
