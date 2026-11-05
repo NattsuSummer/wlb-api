@@ -1,0 +1,16 @@
+{
+ "users": [
+  {
+   "username": "demo",
+   "displayName": "Demo",
+   "role": "admin",
+   "avatarColor": "#FFE6A4",
+   "targets": { "พักผ่อน": 40, "ทำงาน": 30, "project เสริม": 20, "ฝึกฝน": 10 },
+   "slots": [
+    { "weekday": 0, "hour": 0, "categories": ["พักผ่อน"], "description": "นอน" },
+    { "weekday": 0, "hour": 9, "categories": ["ทำงาน"], "description": "งานประจำ" },
+    { "weekday": 0, "hour": 20, "categories": ["พักผ่อน", "project เสริม"], "description": "สตีมเกม" }
+   ]
+  }
+ ]
+}
