@@ -1,0 +1,8 @@
+node_modules/
+.wrangler/
+.dev.vars
+dist/
+# Personal seed data and generated SQL never go in the (public) repo.
+seed/*.json
+!seed/seed.example.json
+seed/*.sql

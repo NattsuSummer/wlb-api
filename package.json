@@ -1,0 +1,24 @@
+{
+  "name": "wlb-api",
+  "version": "0.1.0",
+  "private": true,
+  "type": "module",
+  "description": "Backend for Balance Our Day (Cloudflare Workers + D1)",
+  "scripts": {
+    "dev": "wrangler dev",
+    "deploy": "wrangler deploy",
+    "typecheck": "tsc --noEmit",
+    "test": "tsx --test test/*.test.ts",
+    "db:migrate:local": "wrangler d1 migrations apply DB --local",
+    "db:migrate:remote": "wrangler d1 migrations apply DB --remote",
+    "seed:sql": "tsx scripts/build-seed-sql.ts"
+  },
+  "devDependencies": {
+    "tsx": "^4.20.0",
+    "typescript": "^5.9.0",
+    "wrangler": "^4.40.0"
+  },
+  "engines": {
+    "node": ">=22.13"
+  }
+}
