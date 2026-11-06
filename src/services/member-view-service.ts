@@ -1,16 +1,33 @@
 // Builds what one member may see of another — shared by the members page, "now" and schedule views.
+import { courseState, inCatalog, percent } from '../domain/course';
 import { maskSlot, maskWeek, visibility } from '../domain/privacy';
 import { nowInfo, summarize } from '../domain/schedule';
 import { bangkokNow } from '../domain/time';
 import { publicUser, type User } from '../domain/user';
-import type { PrivacyRepository, ScheduleRepository, TimeCategoryRepository } from '../repositories/interfaces';
+import type { CourseRepository, PrivacyRepository, ProgressRepository, ScheduleRepository, TimeCategoryRepository } from '../repositories/interfaces';
 
 export class MemberViewService {
   constructor(
     private schedules: ScheduleRepository,
     private privacy: PrivacyRepository,
     private categories: TimeCategoryRepository,
+    private courses: CourseRepository,
+    private progress: ProgressRepository,
   ) {}
+
+  /** Courses `userId` is in the middle of, limited to ones the viewer could open too. */
+  async coursesInProgress(userId: number, viewerId: number) {
+    const [all, byCourse] = await Promise.all([this.courses.listSummaries(), this.progress.byCourse(userId)]);
+    return all
+      .filter((c) => byCourse.has(c.id) && inCatalog(c, { id: viewerId, role: 'member' }))
+      .map((c) => {
+        const p = byCourse.get(c.id)!;
+        const done = Math.min(p.done, c.lessonCount);
+        return { id: c.id, title: c.title, categoryId: c.categoryId, done, total: c.lessonCount, percent: percent(done, c.lessonCount), state: courseState(done, c.lessonCount), lastAt: p.lastAt };
+      })
+      .filter((c) => c.state === 'in_progress')
+      .sort((a, b) => b.lastAt.localeCompare(a.lastAt));
+  }
 
   async categoryIds() {
     return (await this.categories.list()).map((c) => c.id);
@@ -36,13 +53,15 @@ export class MemberViewService {
     }
     const cats = categoryIds ?? (await this.categoryIds());
     const summary = week && sumLevel !== 'hide' ? summarize(week, cats, await this.schedules.loadTargets(u.id)) : null;
+    const coursesLevel = visibility(p, 'courses', isOwner);
     return {
       user: publicUser(u),
       isMe: isOwner,
       privateMode: !isOwner && p.privateMode,
-      visible: { schedule: schedLevel, now: nowLevel, summary: sumLevel, courses: visibility(p, 'courses', isOwner) },
+      visible: { schedule: schedLevel, now: nowLevel, summary: sumLevel, courses: coursesLevel },
       now,
       summary,
+      courses: coursesLevel === 'hide' ? null : await this.coursesInProgress(u.id, viewerId),
     };
   }
 

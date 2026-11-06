@@ -17,7 +17,7 @@ npm run typecheck
 npm run dev         # wrangler dev (ต้อง migrate local ก่อน: npm run db:migrate:local)
 ```
 
-## API (เฟส 1)
+## API (เฟส 1–2)
 
 ทุก endpoint (ยกเว้น login/health) ต้องส่ง `Authorization: Bearer <token>`
 ผู้ใช้ที่ยังต้องเปลี่ยนรหัสผ่าน ใช้ได้แค่ `GET /api/me`, `POST /api/me/password`, `POST /api/auth/logout`
@@ -45,6 +45,30 @@ npm run dev         # wrangler dev (ต้อง migrate local ก่อน: npm
 | GET / DELETE | `/api/admin/tokens[/:id]` | admin · ดูและยกเลิก API token ทุกคน |
 
 ช่องหนึ่งใส่ได้หลายหมวด (`categoryIds`) ตอนสรุปจะหารชั่วโมงเท่ากัน เช่น 2 หมวด = หมวดละ 0.5 ชม.
+
+## API คอร์ส (เฟส 3)
+
+คอร์สเขียนเป็น JSON รูปแบบเดียวกันทุกทาง (เว็บ, import, API token, AI) — ดูรายละเอียดที่ `GET /api/import/guide.md` (เปิดได้ไม่ต้อง login เอาไว้ส่งให้ AI อ่าน)
+
+| Method | Path | ทำอะไร |
+|---|---|---|
+| GET | `/api/import/guide.md` | AI Guide: รูปแบบ JSON + หมวด + ตัวอย่าง |
+| POST | `/api/import/validate` | ตรวจ JSON → `{errors, warnings, draft}` (errors บล็อกการบันทึก, warnings ไม่บล็อก) |
+| POST | `/api/courses` · `/api/import/course` | สร้างคอร์ส · ส่งด้วย API token จะเป็น **ร่าง** (`?status=published` เพื่อเผยแพร่ทันที) |
+| GET | `/api/courses` | catalog: packs (เรียงตามลำดับ) + คอร์สเดี่ยว + กำลังเรียน พร้อม progress ของฉัน |
+| GET | `/api/courses/:id` | รายละเอียด + บท + pack + `skippedCourses` (คอร์สก่อนหน้าใน pack ที่ยังไม่จบ) |
+| PUT | `/api/courses/:id` | แก้ทั้งคอร์ส (JSON เดิม) · บท/แบบฝึกที่มี `id` เดิมจะเก็บ progress ไว้ |
+| PATCH | `/api/courses/:id` | `visibility`, `status`, `packId`, `orderInPack` |
+| DELETE | `/api/courses/:id` | ผู้สร้างหรือ admin |
+| GET | `/api/courses/:id/export` | JSON สำหรับแก้/นำเข้าใหม่ |
+| GET | `/api/lessons/:id` | เนื้อหาบท + แบบฝึก + `skipped` (บทก่อนหน้าที่ยังไม่จบ) + คำตอบเพื่อน (ถ้าเขาแชร์) |
+| POST | `/api/lessons/:id/complete` | `{done: true\|false}` |
+| POST | `/api/exercises/:id/attempt` | `{answer}` · mcq = index, checklist = [index], text = ข้อความ · เฉลย mcq เห็นหลังตอบครั้งแรก |
+| GET / POST / PATCH / DELETE | `/api/packs[/:id]` | ใครก็สร้าง pack ได้ · แก้/ลบได้เฉพาะผู้สร้างหรือ admin · ลบ pack แล้วคอร์สกลายเป็นคอร์สเดี่ยว |
+| GET | `/api/admin/courses` | admin · ทุกคอร์ส รวมส่วนตัวและร่าง |
+| POST / PATCH / DELETE | `/api/course-categories[/:id]` | admin · ลบหมวดที่ยังมีคอร์สใช้ไม่ได้ (409) |
+
+สิทธิ์: คอร์ส `group` + `published` ทุกคนเห็น · `private` หรือร่าง เห็นเฉพาะผู้สร้าง (และ admin ในหน้า admin)
 
 ## ความเป็นส่วนตัว
 

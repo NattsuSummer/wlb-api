@@ -1,5 +1,6 @@
 // Repository contracts. Use cases depend on these interfaces only; d1/* implements them for Cloudflare D1.
 import type { ApiTokenInfo, CourseCategory, TimeCategory } from '../domain/category';
+import type { Course, CourseDraft, CourseStatus, CourseSummary, Exercise, Lesson, Pack, Visibility } from '../domain/course';
 import type { Privacy } from '../domain/privacy';
 import type { Slot, Week } from '../domain/schedule';
 import type { Actor, Locale, Role, Theme, User, UserCredentials } from '../domain/user';
@@ -68,6 +69,57 @@ export interface TimeCategoryRepository {
 
 export interface CourseCategoryRepository {
   list(): Promise<CourseCategory[]>;
+  usageOf(id: number): Promise<number>; // courses + packs using it
+  create(c: Omit<CourseCategory, 'id' | 'sort'>): Promise<number>;
+  update(id: number, patch: Partial<Omit<CourseCategory, 'id'>>): Promise<boolean>;
+  delete(id: number): Promise<boolean>;
+}
+
+export type NewPack = Omit<Pack, 'id' | 'createdAt'>;
+
+export interface PackRepository {
+  list(): Promise<Pack[]>;
+  findById(id: number): Promise<Pack | null>;
+  create(p: NewPack): Promise<number>;
+  update(id: number, patch: Partial<Omit<NewPack, 'createdBy'>>): Promise<boolean>;
+  /** Courses in a deleted pack become single courses. */
+  delete(id: number): Promise<boolean>;
+  nextOrder(packId: number): Promise<number>;
+}
+
+export interface CourseWrite {
+  draft: CourseDraft;
+  packId: number | null;
+  orderInPack: number | null;
+  status: CourseStatus;
+}
+
+export interface CourseRepository {
+  listSummaries(): Promise<CourseSummary[]>;
+  findById(id: number): Promise<Course | null>;
+  lessons(courseId: number): Promise<Lesson[]>;
+  exercises(courseId: number): Promise<Exercise[]>;
+  findLesson(lessonId: number): Promise<Lesson | null>;
+  findExercise(exerciseId: number): Promise<(Exercise & { courseId: number }) | null>;
+  /** Course, lessons and exercises in one atomic write. */
+  create(w: CourseWrite & { createdBy: number }): Promise<number>;
+  /** Replace contents atomically. Lessons/exercises with a known id are updated in place (progress kept); others are added; missing ones removed. */
+  replace(id: number, w: CourseWrite): Promise<void>;
+  patch(id: number, p: { visibility?: Visibility; status?: CourseStatus; packId?: number | null; orderInPack?: number | null }): Promise<void>;
+  delete(id: number): Promise<boolean>;
+}
+
+export interface Attempt { exerciseId: number; userId: number; answer: unknown; isCorrect: boolean | null; createdAt: string }
+
+export interface ProgressRepository {
+  completedLessonIds(userId: number, courseId?: number): Promise<Set<number>>;
+  /** Per course: lessons completed and when the user last did something. */
+  byCourse(userId: number): Promise<Map<number, { done: number; lastAt: string }>>;
+  setCompleted(userId: number, lessonId: number, at: string | null): Promise<void>;
+  addAttempt(a: Attempt): Promise<void>;
+  latestAttempts(userId: number, exerciseIds: number[]): Promise<Map<number, Attempt>>;
+  /** Latest answer per (user, exercise) for other users. */
+  othersLatest(exerciseIds: number[], exceptUserId: number): Promise<Attempt[]>;
 }
 
 export interface ScheduleRepository {
@@ -88,6 +140,9 @@ export interface Repositories {
   tokens: TokenRepository;
   timeCategories: TimeCategoryRepository;
   courseCategories: CourseCategoryRepository;
+  packs: PackRepository;
+  courses: CourseRepository;
+  progress: ProgressRepository;
   schedules: ScheduleRepository;
   privacy: PrivacyRepository;
 }

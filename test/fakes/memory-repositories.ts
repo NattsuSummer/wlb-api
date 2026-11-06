@@ -78,7 +78,21 @@ export function memoryRepositories(categories: Omit<TimeCategory, 'sort'>[] = DE
       update: async (id, p) => { const c = cats.find((x) => x.id === id); if (!c) return false; Object.assign(c, Object.fromEntries(Object.entries(p).filter(([, v]) => v !== undefined))); return true; },
       delete: async (id) => { const i = cats.findIndex((x) => x.id === id); if (i < 0) return false; cats.splice(i, 1); return true; },
     },
-    courseCategories: { list: async (): Promise<CourseCategory[]> => [] },
+    courseCategories: {
+      list: async (): Promise<CourseCategory[]> => [],
+      usageOf: async () => 0,
+      create: notInMemory, update: notInMemory, delete: notInMemory,
+    },
+    // Course storage is exercised against SQLite in test/courses.test.ts; here it is just empty.
+    packs: { list: async () => [], findById: async () => null, create: notInMemory, update: notInMemory, delete: notInMemory, nextOrder: async () => 1 },
+    courses: {
+      listSummaries: async () => [], findById: async () => null, lessons: async () => [], exercises: async () => [],
+      findLesson: async () => null, findExercise: async () => null, create: notInMemory, replace: notInMemory, patch: notInMemory, delete: notInMemory,
+    },
+    progress: {
+      completedLessonIds: async () => new Set(), byCourse: async () => new Map(), setCompleted: notInMemory,
+      addAttempt: notInMemory, latestAttempts: async () => new Map(), othersLatest: async () => [],
+    },
     schedules: {
       loadWeek: async (uid) => weekOf(uid).slice(),
       saveCells: async (uid, cells: { weekday: number; hour: number; slot: Slot | null }[]) => {
@@ -95,6 +109,8 @@ export function memoryRepositories(categories: Omit<TimeCategory, 'sort'>[] = DE
     },
   };
 }
+
+const notInMemory = async (): Promise<never> => { throw new Error('not implemented in memory repositories'); };
 
 export const DEFAULT_CATS = [
   { id: 1, nameTh: 'พักผ่อน', nameEn: 'Rest', color: '#C1E6FF' },
