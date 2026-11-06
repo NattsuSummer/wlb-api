@@ -1,12 +1,19 @@
-import type { Env } from './db';
-import type { AuthUser } from './auth';
+import type { Container } from '../container';
+import { unauthorizedError } from '../domain/errors';
+import type { Actor } from '../domain/user';
 
 export interface Ctx {
   req: Request;
-  env: Env;
   url: URL;
   params: Record<string, string>;
-  user: AuthUser | null;
+  actor: Actor | null;
+  uc: Container['usecases'];
+}
+
+/** The logged-in actor, or 401. */
+export function actorOf(ctx: Ctx): Actor {
+  if (!ctx.actor) throw unauthorizedError();
+  return ctx.actor;
 }
 
 export type Handler = (ctx: Ctx) => Promise<Response> | Response;

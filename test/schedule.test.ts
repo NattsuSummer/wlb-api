@@ -1,7 +1,7 @@
 import assert from 'node:assert/strict';
 import { test } from 'node:test';
-import { blockAt, emptyWeek, normalizeSlot, nowInfo, planRange, summarize, targetsProblem } from '../src/lib/schedule';
-import { bangkokNow, slotIndex } from '../src/lib/time';
+import { blockAt, emptyWeek, normalizeSlot, nowInfo, planRange, summarize, targetsProblem } from '../src/domain/schedule';
+import { bangkokNow, slotIndex } from '../src/domain/time';
 
 const REST = 1, WORK = 2, SIDE = 3;
 const rest = normalizeSlot([REST], 'นอน');

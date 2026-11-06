@@ -19,8 +19,3 @@ export interface D1Database {
   prepare(query: string): D1PreparedStatement;
   batch(statements: D1PreparedStatement[]): Promise<D1Result[]>;
 }
-
-export interface Env {
-  DB: D1Database;
-  ALLOWED_ORIGINS?: string;
-}

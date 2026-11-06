@@ -1,9 +1,14 @@
-// Password hashing and token helpers built on WebCrypto (works in Workers and Node ≥ 20).
+// Password hashing on WebCrypto PBKDF2-SHA256 (works in Workers and Node ≥ 20).
+
+export interface PasswordService {
+  hash(password: string): Promise<string>;
+  verify(password: string, stored: string): Promise<boolean>;
+}
 
 const ITERATIONS = 100_000; // Cloudflare Workers caps PBKDF2 at 100k iterations.
 const enc = new TextEncoder();
 
-function toB64(bytes: Uint8Array): string {
+export function toB64(bytes: Uint8Array): string {
   let s = '';
   for (const b of bytes) s += String.fromCharCode(b);
   return btoa(s);
@@ -40,22 +45,13 @@ export async function verifyPassword(password: string, stored: string): Promise<
   return diff === 0;
 }
 
-export function randomToken(prefix: string): string {
-  const bytes = crypto.getRandomValues(new Uint8Array(32));
-  const b64url = toB64(bytes).replace(/\+/g, '-').replace(/\//g, '_').replace(/=+$/, '');
-  return prefix + b64url;
-}
-
-export async function sha256Hex(s: string): Promise<string> {
-  const digest = await crypto.subtle.digest('SHA-256', enc.encode(s));
-  return [...new Uint8Array(digest)].map((b) => b.toString(16).padStart(2, '0')).join('');
-}
-
-/** Password rules shared with the frontend. Returns a list of failed rule codes. */
-export function passwordProblems(pw: string, opts: { forbid?: string[] } = {}): string[] {
-  const out: string[] = [];
-  if (pw.length < 8) out.push('min_length_8');
-  if (!/[A-Za-z]/.test(pw) || !/[0-9]/.test(pw)) out.push('letters_and_digits');
-  if (opts.forbid?.includes(pw)) out.push('not_default');
-  return out;
+export class Pbkdf2PasswordService implements PasswordService {
+  // Spend the same time on unknown usernames as on wrong passwords.
+  private dummy: Promise<string> | null = null;
+  hash = hashPassword;
+  verify = verifyPassword;
+  async verifyDummy(password: string) {
+    await verifyPassword(password, await (this.dummy ??= hashPassword('dummy-password-1')));
+    return false;
+  }
 }

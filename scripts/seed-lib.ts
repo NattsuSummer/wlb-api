@@ -1,4 +1,4 @@
-import { hashPassword } from '../src/crypto';
+import { hashPassword } from '../src/services/password-service';
 
 export interface SeedUser {
   username: string;
