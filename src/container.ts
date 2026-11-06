@@ -10,6 +10,11 @@ import { AuthenticateUseCase, ChangePasswordUseCase, LoginUseCase, LogoutUseCase
 import {
   CreateTimeCategoryUseCase, DeleteTimeCategoryUseCase, ListCourseCategoriesUseCase, ListTimeCategoriesUseCase, UpdateTimeCategoryUseCase,
 } from './usecases/categories';
+import {
+  AdminListCoursesUseCase, AttemptExerciseUseCase, CreateCourseCategoryUseCase, CreatePackUseCase, DeleteCourseCategoryUseCase, DeleteCourseUseCase,
+  DeletePackUseCase, ExportCourseUseCase, GetCourseUseCase, GetImportGuideUseCase, GetLessonUseCase, ImportCourseUseCase, ListCatalogUseCase,
+  ListPacksUseCase, PatchCourseUseCase, SetLessonCompleteUseCase, UpdateCourseCategoryUseCase, UpdateCourseUseCase, UpdatePackUseCase, ValidateCourseUseCase,
+} from './usecases/courses';
 import type { Deps } from './usecases/deps';
 import {
   CreateApiTokenUseCase, GetMeUseCase, GetPrivacyUseCase, ListMyTokensUseCase, RevokeMyTokenUseCase, UpdatePrivacyUseCase, UpdateProfileUseCase,
@@ -62,6 +67,27 @@ export function buildUseCases(d: Deps) {
     setTargets: new SetTargetsUseCase(d),
 
     getNow: new GetNowUseCase(d),
+
+    listCatalog: new ListCatalogUseCase(d),
+    adminListCourses: new AdminListCoursesUseCase(d),
+    getCourse: new GetCourseUseCase(d),
+    getLesson: new GetLessonUseCase(d),
+    setLessonComplete: new SetLessonCompleteUseCase(d),
+    attemptExercise: new AttemptExerciseUseCase(d),
+    validateCourse: new ValidateCourseUseCase(d),
+    importCourse: new ImportCourseUseCase(d),
+    updateCourse: new UpdateCourseUseCase(d),
+    patchCourse: new PatchCourseUseCase(d),
+    deleteCourse: new DeleteCourseUseCase(d),
+    exportCourse: new ExportCourseUseCase(d),
+    getImportGuide: new GetImportGuideUseCase(d),
+    listPacks: new ListPacksUseCase(d),
+    createPack: new CreatePackUseCase(d),
+    updatePack: new UpdatePackUseCase(d),
+    deletePack: new DeletePackUseCase(d),
+    createCourseCategory: new CreateCourseCategoryUseCase(d),
+    updateCourseCategory: new UpdateCourseCategoryUseCase(d),
+    deleteCourseCategory: new DeleteCourseCategoryUseCase(d),
   };
 }
 
@@ -72,7 +98,7 @@ export function createContainer(repos: Repositories, clock: Clock = systemClock)
     passwords,
     clock,
     tokens: new TokenService(repos.tokens, clock),
-    memberView: new MemberViewService(repos.schedules, repos.privacy, repos.timeCategories),
+    memberView: new MemberViewService(repos.schedules, repos.privacy, repos.timeCategories, repos.courses, repos.progress),
   };
   return { deps, usecases: buildUseCases(deps) };
 }

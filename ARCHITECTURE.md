@@ -25,11 +25,11 @@ Dependencies point **inward only**: `domain` imports nothing; `usecases` know on
 
 `validation` 400 · `unauthorized` 401 · `forbidden` 403 · `not_found` 404 · `conflict` 409 · `locked` 429 — mapped once in `src/http/http.ts`.
 
-## เพิ่ม feature ใหม่ (เช่น courses เฟส 3)
+## เพิ่ม feature ใหม่ (ตัวอย่าง: courses เฟส 3 ทำตามนี้)
 
 1. `domain/course.ts` — types + กฎ (ลำดับบทเรียน, คำเตือนข้ามคอร์ส)
 2. `repositories/interfaces.ts` — เพิ่ม `CourseRepository`; เขียน `repositories/d1/course-repository.ts`
-3. `usecases/courses/` — `CreateCourseUseCase`, `ImportCoursePackUseCase`, …
+3. `usecases/courses/` — `ImportCourseUseCase`, `GetLessonUseCase`, `AttemptExerciseUseCase`, …
 4. `http/controllers/courses-controller.ts` — ผูก route
 5. ลงทะเบียนใน `container.ts`
 6. Test: use case ด้วย `test/fakes/memory-repositories.ts` (เร็ว ไม่มี DB) + API test ใน `test/api.test.ts`
@@ -39,4 +39,5 @@ Dependencies point **inward only**: `domain` imports nothing; `usecases` know on
 - `test/schedule.test.ts` — domain ล้วน
 - `test/usecases.test.ts` — use case + in-memory repos + `Clock` ปลอม (lockout, session หมดอายุ, overwrite confirm, last admin …)
 - `test/api.test.ts` — end-to-end ผ่าน HTTP บน SQLite (`test/helpers/d1.ts`)
+- `test/courses.test.ts` — คอร์สผ่าน HTTP บน SQLite (import, สิทธิ์, progress, pack, privacy)
 - `test/seed.test.ts` — seed builder

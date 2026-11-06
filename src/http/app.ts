@@ -2,6 +2,7 @@
 import type { Container } from '../container';
 import { forbiddenError, notFoundError } from '../domain/errors';
 import { authController } from './controllers/auth-controller';
+import { coursesController } from './controllers/courses-controller';
 import { categoriesController } from './controllers/categories-controller';
 import { meController } from './controllers/me-controller';
 import { nowController } from './controllers/now-controller';
@@ -18,6 +19,7 @@ usersController(router);
 categoriesController(router);
 schedulesController(router);
 nowController(router);
+coursesController(router);
 
 // While a user must change their password, only these endpoints work.
 const ALLOWED_BEFORE_PASSWORD_CHANGE = new Set(['/api/me', '/api/me/password', '/api/auth/logout']);
