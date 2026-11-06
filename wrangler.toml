@@ -6,6 +6,8 @@ workers_dev = true
 [vars]
 # Comma-separated list of web origins allowed to call the API (CORS).
 ALLOWED_ORIGINS = "https://balance-our-day.pages.dev,http://localhost:5173"
+# The website (OAuth consent page for the MCP connector, links in MCP results).
+WEB_URL = "https://balance-our-day.pages.dev"
 
 [[d1_databases]]
 binding = "DB"

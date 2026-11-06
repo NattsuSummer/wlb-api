@@ -1,6 +1,7 @@
 // Repository contracts. Use cases depend on these interfaces only; d1/* implements them for Cloudflare D1.
 import type { ApiTokenInfo, CourseCategory, TimeCategory } from '../domain/category';
 import type { Course, CourseDraft, CourseStatus, CourseSummary, Exercise, Lesson, Pack, Visibility } from '../domain/course';
+import type { OAuthClient } from '../domain/oauth';
 import type { Privacy } from '../domain/privacy';
 import type { Slot, Week } from '../domain/schedule';
 import type { Actor, Locale, Role, Theme, User, UserCredentials } from '../domain/user';
@@ -135,6 +136,26 @@ export interface PrivacyRepository {
   save(userId: number, p: Privacy): Promise<void>;
 }
 
+export interface OAuthCode {
+  codeHash: string; clientId: string; userId: number; redirectUri: string; codeChallenge: string; scope: string; autoPublish: boolean; expiresAt: string;
+}
+export interface OAuthGrant {
+  id: number; clientId: string; userId: number; refreshHash: string; accessTokenId: string | null; scope: string; autoPublish: boolean; refreshExpiresAt: string;
+}
+
+export interface OAuthRepository {
+  createClient(c: Omit<OAuthClient, 'createdAt'>): Promise<void>;
+  findClient(id: string): Promise<OAuthClient | null>;
+  saveCode(c: OAuthCode): Promise<void>;
+  /** Read and delete in one step: a code works once. */
+  takeCode(codeHash: string): Promise<OAuthCode | null>;
+  createGrant(g: Omit<OAuthGrant, 'id'>): Promise<number>;
+  findGrantByRefresh(refreshHash: string): Promise<OAuthGrant | null>;
+  findGrantByAccessToken(tokenId: string): Promise<(OAuthGrant & { clientName: string }) | null>;
+  /** New refresh token + access token for an existing grant (old refresh stops working). */
+  rotateGrant(id: number, refreshHash: string, accessTokenId: string, refreshExpiresAt: string): Promise<void>;
+}
+
 export interface Repositories {
   users: UserRepository;
   tokens: TokenRepository;
@@ -143,6 +164,7 @@ export interface Repositories {
   packs: PackRepository;
   courses: CourseRepository;
   progress: ProgressRepository;
+  oauth: OAuthRepository;
   schedules: ScheduleRepository;
   privacy: PrivacyRepository;
 }

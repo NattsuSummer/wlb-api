@@ -15,7 +15,9 @@ import {
   DeletePackUseCase, ExportCourseUseCase, GetCourseUseCase, GetImportGuideUseCase, GetLessonUseCase, ImportCourseUseCase, ListCatalogUseCase,
   ListPacksUseCase, PatchCourseUseCase, SetLessonCompleteUseCase, UpdateCourseCategoryUseCase, UpdateCourseUseCase, UpdatePackUseCase, ValidateCourseUseCase,
 } from './usecases/courses';
-import type { Deps } from './usecases/deps';
+import type { AppConfig, Deps } from './usecases/deps';
+import { McpUseCase } from './usecases/mcp';
+import { DecideConsentUseCase, GetConsentUseCase, RegisterClientUseCase, StartAuthorizeUseCase, TokenUseCase } from './usecases/oauth';
 import {
   CreateApiTokenUseCase, GetMeUseCase, GetPrivacyUseCase, ListMyTokensUseCase, RevokeMyTokenUseCase, UpdatePrivacyUseCase, UpdateProfileUseCase,
 } from './usecases/me';
@@ -88,21 +90,31 @@ export function buildUseCases(d: Deps) {
     createCourseCategory: new CreateCourseCategoryUseCase(d),
     updateCourseCategory: new UpdateCourseCategoryUseCase(d),
     deleteCourseCategory: new DeleteCourseCategoryUseCase(d),
+
+    oauthRegister: new RegisterClientUseCase(d),
+    oauthStart: new StartAuthorizeUseCase(d),
+    oauthConsent: new GetConsentUseCase(d),
+    oauthDecide: new DecideConsentUseCase(d),
+    oauthToken: new TokenUseCase(d),
+    mcp: new McpUseCase(d),
   };
 }
 
 /** Build the dependency graph from any set of repositories (D1 in production, in-memory fakes in tests). */
-export function createContainer(repos: Repositories, clock: Clock = systemClock) {
+export const DEFAULT_CONFIG: AppConfig = { webUrl: 'https://balance-our-day.pages.dev' };
+
+export function createContainer(repos: Repositories, clock: Clock = systemClock, config: AppConfig = DEFAULT_CONFIG) {
   const deps: Deps = {
     repos,
     passwords,
     clock,
     tokens: new TokenService(repos.tokens, clock),
+    config,
     memberView: new MemberViewService(repos.schedules, repos.privacy, repos.timeCategories, repos.courses, repos.progress),
   };
   return { deps, usecases: buildUseCases(deps) };
 }
 
-export const d1Container = (db: D1Database, clock?: Clock) => createContainer(d1Repositories(db), clock);
+export const d1Container = (db: D1Database, clock?: Clock, config?: AppConfig) => createContainer(d1Repositories(db), clock, config);
 
 export type Container = ReturnType<typeof createContainer>;
