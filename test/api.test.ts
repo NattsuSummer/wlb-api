@@ -1,7 +1,7 @@
 import assert from 'node:assert/strict';
 import { beforeEach, describe, test } from 'node:test';
-import { hashPassword } from '../src/crypto';
-import type { Env } from '../src/db';
+import { hashPassword } from '../src/services/password-service';
+import type { Env } from '../src/index';
 import { handle } from '../src/index';
 import { createTestDb } from './helpers/d1';
 

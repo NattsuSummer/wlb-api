@@ -3,8 +3,8 @@ import { readFileSync } from 'node:fs';
 import { join } from 'node:path';
 import { test } from 'node:test';
 import { buildSeedSql } from '../scripts/seed-lib';
-import { summarize } from '../src/lib/schedule';
-import { listTimeCategories, loadTargets, loadWeek } from '../src/store';
+import { summarize } from '../src/domain/schedule';
+import { d1Repositories } from '../src/repositories/d1';
 import { createTestDb } from './helpers/d1';
 
 /** Build seed SQL from a seed file and load it into a fresh test DB. */
@@ -21,11 +21,12 @@ test('seed builder creates users that must change password, with slots and targe
   const u = await db.prepare('SELECT id, role, must_change_password FROM users WHERE username = ?').bind('demo').first<{ id: number; role: string; must_change_password: number }>();
   assert.equal(u!.role, 'admin');
   assert.equal(u!.must_change_password, 1);
-  const week = await loadWeek(db, u!.id);
+  const repos = d1Repositories(db);
+  const week = await repos.schedules.loadWeek(u!.id);
   assert.equal(week.filter(Boolean).length, 3);
   assert.equal(week[20]!.categoryIds.length, 2);
-  const cats = await listTimeCategories(db);
-  const targets = await loadTargets(db, u!.id);
+  const cats = await repos.timeCategories.list();
+  const targets = await repos.schedules.loadTargets(u!.id);
   assert.equal(Object.values(targets).reduce((a, b) => a + b, 0), 100);
   assert.equal(summarize(week, cats.map((c) => c.id), targets).plannedHours, 3);
 });

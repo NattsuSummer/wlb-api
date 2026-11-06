@@ -2,7 +2,7 @@
 import { readdirSync, readFileSync } from 'node:fs';
 import { join } from 'node:path';
 import { DatabaseSync } from 'node:sqlite';
-import type { D1Database, D1PreparedStatement, D1Result } from '../../src/db';
+import type { D1Database, D1PreparedStatement, D1Result } from '../../src/repositories/d1/db';
 
 const fix = (v: unknown) => (v === undefined ? null : typeof v === 'boolean' ? Number(v) : v);
 

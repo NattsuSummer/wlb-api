@@ -6,6 +6,7 @@ Backend ของ **Balance Our Day**: เว็บแอปในกลุ่�
 - Login ด้วย username/password → ได้ bearer token (session 1 วัน หรือ 30 วันถ้าติ๊ก "จำฉัน")
 - เวลาทั้งหมดเป็น Asia/Bangkok (UTC+7) · weekday 0 = จันทร์
 - Frontend: [wlb-web](https://github.com/NattsuSummer/wlb-web)
+- โครงสร้างแบบ clean architecture (`domain` / `repositories` / `services` / `usecases` / `http`) — ดู [ARCHITECTURE.md](ARCHITECTURE.md)
 
 ## พัฒนาในเครื่อง
 
