@@ -89,10 +89,14 @@ export class D1TokenRepository implements TokenRepository {
     return rows.results.map(toInfo);
   }
 
+  /** Revoking a token also ends the OAuth connection (refresh token) that issued it. */
   async deleteApiToken(tokenId: string, userId?: number) {
-    const res = userId === undefined
-      ? await this.db.prepare("DELETE FROM auth_tokens WHERE id = ? AND kind = 'api'").bind(tokenId).run()
-      : await this.db.prepare("DELETE FROM auth_tokens WHERE id = ? AND user_id = ? AND kind = 'api'").bind(tokenId, userId).run();
-    return !!res.meta.changes;
+    const owner = userId === undefined ? '' : ' AND user_id = ?';
+    const args = userId === undefined ? [tokenId] : [tokenId, userId];
+    const [, res] = await this.db.batch([
+      this.db.prepare(`DELETE FROM oauth_grants WHERE access_token_id IN (SELECT id FROM auth_tokens WHERE id = ? AND kind = 'api'${owner})`).bind(...args),
+      this.db.prepare(`DELETE FROM auth_tokens WHERE id = ? AND kind = 'api'${owner}`).bind(...args),
+    ]);
+    return !!res!.meta.changes;
   }
 }

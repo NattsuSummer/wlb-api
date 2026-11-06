@@ -4,6 +4,11 @@ import type { MemberViewService } from '../services/member-view-service';
 import type { Pbkdf2PasswordService } from '../services/password-service';
 import type { TokenService } from '../services/token-service';
 
+export interface AppConfig {
+  /** Public URL of the website (for links and the OAuth consent page). */
+  webUrl: string;
+}
+
 /** Everything a use case may depend on. Built once per request in src/container.ts. */
 export interface Deps {
   repos: Repositories;
@@ -11,4 +16,5 @@ export interface Deps {
   tokens: TokenService;
   clock: Clock;
   memberView: MemberViewService;
+  config: AppConfig;
 }

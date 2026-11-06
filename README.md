@@ -70,6 +70,26 @@ npm run dev         # wrangler dev (ต้อง migrate local ก่อน: npm
 
 สิทธิ์: คอร์ส `group` + `published` ทุกคนเห็น · `private` หรือร่าง เห็นเฉพาะผู้สร้าง (และ admin ในหน้า admin)
 
+## MCP connector (เฟส 4) — ให้ Claude เพิ่มคอร์สให้
+
+URL ของ connector: `https://balance-our-day-api.nattsummer-14.workers.dev/mcp`
+
+ใน Claude: **Settings → Connectors → Add custom connector** → ใส่ URL ด้านบน → Connect → login เว็บ Balance Our Day → กดอนุญาต
+ไม่ต้องคัดลอก token · Claude ของใครก็ใช้ได้ เพราะ server ส่งคำแนะนำ + คำอธิบาย tool ให้เอง
+
+| Tool | ทำอะไร |
+|---|---|
+| `get_import_guide` | อ่านรูปแบบ JSON (บอกให้เรียกก่อน) |
+| `list_course_categories` · `list_packs` · `list_my_courses` | ข้อมูลประกอบ |
+| `get_course` | JSON ของคอร์ส (มี id บท/แบบฝึก ไว้แก้) |
+| `validate_course` | ตรวจโดยไม่บันทึก |
+| `create_course` | บันทึกเป็น **ร่าง** + ส่งลิงก์พรีวิวกลับ (ถ้าตอนอนุญาตติ๊ก "เผยแพร่ได้ทันที" จะเผยแพร่เลย) |
+| `update_course` | แก้ได้เฉพาะคอร์สที่ตัวเองสร้าง |
+
+OAuth 2.1: dynamic client registration (`/oauth/register`), authorization code + PKCE S256 (`/oauth/authorize` → หน้า consent บนเว็บ → `/oauth/token`), refresh token หมุนทุกครั้ง
+· discovery: `/.well-known/oauth-protected-resource`, `/.well-known/oauth-authorization-server`
+· access token อายุ 30 วัน เห็นในหน้า ตั้งค่า › API tokens ชื่อ "Claude (MCP)" — ลบที่นั่น = ตัดการเชื่อมต่อ
+
 ## ความเป็นส่วนตัว
 
 แต่ละคนตั้งได้ว่าคนอื่นเห็นอะไร: `schedule` / `nowStatus` = `full | cat | hide` (cat = เห็นหมวดแต่ไม่เห็นคำอธิบาย), `summary` / `courses` / `answers` = `show | hide`, และ `privateMode` ซ่อนทุกอย่าง · admin เห็นตามกฎเดียวกับทุกคน

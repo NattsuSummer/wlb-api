@@ -103,6 +103,10 @@ export function memoryRepositories(categories: Omit<TimeCategory, 'sort'>[] = DE
       loadTargets: async (uid) => ({ ...(targets.get(uid) ?? {}) }),
       saveTargets: async (uid, t) => { targets.set(uid, { ...t }); },
     },
+    oauth: {
+      createClient: notInMemory, findClient: async () => null, saveCode: notInMemory, takeCode: async () => null,
+      createGrant: notInMemory, findGrantByRefresh: async () => null, findGrantByAccessToken: async () => null, rotateGrant: notInMemory,
+    },
     privacy: {
       load: async (uid) => ({ ...(privacy.get(uid) ?? DEFAULT_PRIVACY) }),
       save: async (uid, p) => { privacy.set(uid, { ...p }); },

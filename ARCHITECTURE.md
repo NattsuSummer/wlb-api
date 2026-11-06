@@ -40,4 +40,5 @@ Dependencies point **inward only**: `domain` imports nothing; `usecases` know on
 - `test/usecases.test.ts` — use case + in-memory repos + `Clock` ปลอม (lockout, session หมดอายุ, overwrite confirm, last admin …)
 - `test/api.test.ts` — end-to-end ผ่าน HTTP บน SQLite (`test/helpers/d1.ts`)
 - `test/courses.test.ts` — คอร์สผ่าน HTTP บน SQLite (import, สิทธิ์, progress, pack, privacy)
+- `test/mcp.test.ts` — OAuth (register → authorize → consent → token → refresh → revoke) + MCP tools
 - `test/seed.test.ts` — seed builder

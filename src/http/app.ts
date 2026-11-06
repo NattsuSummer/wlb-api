@@ -3,6 +3,8 @@ import type { Container } from '../container';
 import { forbiddenError, notFoundError } from '../domain/errors';
 import { authController } from './controllers/auth-controller';
 import { coursesController } from './controllers/courses-controller';
+import { mcpController } from './controllers/mcp-controller';
+import { oauthController } from './controllers/oauth-controller';
 import { categoriesController } from './controllers/categories-controller';
 import { meController } from './controllers/me-controller';
 import { nowController } from './controllers/now-controller';
@@ -20,13 +22,25 @@ categoriesController(router);
 schedulesController(router);
 nowController(router);
 coursesController(router);
+oauthController(router);
+mcpController(router);
 
 // While a user must change their password, only these endpoints work.
 const ALLOWED_BEFORE_PASSWORD_CHANGE = new Set(['/api/me', '/api/me/password', '/api/auth/logout']);
 
+// OAuth discovery, registration, token and MCP endpoints are called by other apps (no cookies are used): any origin.
+const isPublic = (p: string) => p.startsWith('/.well-known/') || p.startsWith('/oauth/') || p === '/mcp' || p === '/api/import/guide.md';
+const PUBLIC_CORS = {
+  'access-control-allow-origin': '*',
+  'access-control-allow-headers': 'authorization, content-type, mcp-protocol-version, mcp-session-id',
+  'access-control-allow-methods': 'GET, POST, DELETE, OPTIONS',
+  'access-control-expose-headers': 'www-authenticate, mcp-session-id',
+  'access-control-max-age': '86400',
+};
+
 export async function handleRequest(req: Request, container: Container, allowedOrigins?: string): Promise<Response> {
   const url = new URL(req.url);
-  const cors = corsHeaders(req, allowedOrigins);
+  const cors = isPublic(url.pathname) ? PUBLIC_CORS : corsHeaders(req, allowedOrigins);
   if (req.method === 'OPTIONS') return new Response(null, { status: 204, headers: cors });
 
   let res: Response;
