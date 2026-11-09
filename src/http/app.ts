@@ -4,6 +4,7 @@ import { forbiddenError, notFoundError } from '../domain/errors';
 import { authController } from './controllers/auth-controller';
 import { coursesController } from './controllers/courses-controller';
 import { mcpController } from './controllers/mcp-controller';
+import { routinesController } from './controllers/routines-controller';
 import { oauthController } from './controllers/oauth-controller';
 import { categoriesController } from './controllers/categories-controller';
 import { meController } from './controllers/me-controller';
@@ -24,12 +25,13 @@ nowController(router);
 coursesController(router);
 oauthController(router);
 mcpController(router);
+routinesController(router);
 
 // While a user must change their password, only these endpoints work.
 const ALLOWED_BEFORE_PASSWORD_CHANGE = new Set(['/api/me', '/api/me/password', '/api/auth/logout']);
 
 // OAuth discovery, registration, token and MCP endpoints are called by other apps (no cookies are used): any origin.
-const isPublic = (p: string) => p.startsWith('/.well-known/') || p.startsWith('/oauth/') || p === '/mcp' || p === '/api/import/guide.md';
+const isPublic = (p: string) => p.startsWith('/.well-known/') || p.startsWith('/oauth/') || p === '/mcp' || p === '/api/import/guide.md' || p === '/api/routines/guide.md';
 const PUBLIC_CORS = {
   'access-control-allow-origin': '*',
   'access-control-allow-headers': 'authorization, content-type, mcp-protocol-version, mcp-session-id',

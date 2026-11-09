@@ -107,6 +107,12 @@ export function memoryRepositories(categories: Omit<TimeCategory, 'sort'>[] = DE
       createClient: notInMemory, findClient: async () => null, saveCode: notInMemory, takeCode: async () => null,
       createGrant: notInMemory, findGrantByRefresh: async () => null, findGrantByAccessToken: async () => null, rotateGrant: notInMemory,
     },
+    routines: {
+      listItems: async () => [], findItem: async () => null, createItem: notInMemory, updateItem: notInMemory, patchItem: notInMemory,
+      deleteItem: notInMemory, itemUsage: async () => 0, listPlans: async () => [], findPlan: async () => null, entries: async () => [],
+      allEntries: async () => [], createPlan: notInMemory, replacePlan: notInMemory, patchPlan: notInMemory, deletePlan: notInMemory,
+      assignments: async () => [], setAssignments: notInMemory,
+    },
     privacy: {
       load: async (uid) => ({ ...(privacy.get(uid) ?? DEFAULT_PRIVACY) }),
       save: async (uid, p) => { privacy.set(uid, { ...p }); },
