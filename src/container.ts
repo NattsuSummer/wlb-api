@@ -17,6 +17,11 @@ import {
 } from './usecases/courses';
 import type { AppConfig, Deps } from './usecases/deps';
 import { McpUseCase } from './usecases/mcp';
+import {
+  DeleteRoutineUseCase, ExportRoutineItemUseCase, ExportRoutinePlanUseCase, GetMyRoutineWeekUseCase, GetRoutineGuideUseCase, GetRoutineItemUseCase,
+  GetRoutinePlanUseCase, ImportRoutinesUseCase, ListRoutinesUseCase, PatchRoutineUseCase, SetRoutineDaysUseCase, UpdateRoutineItemUseCase,
+  UpdateRoutinePlanUseCase, ValidateRoutinesUseCase,
+} from './usecases/routines';
 import { DecideConsentUseCase, GetConsentUseCase, RegisterClientUseCase, StartAuthorizeUseCase, TokenUseCase } from './usecases/oauth';
 import {
   CreateApiTokenUseCase, GetMeUseCase, GetPrivacyUseCase, ListMyTokensUseCase, RevokeMyTokenUseCase, UpdatePrivacyUseCase, UpdateProfileUseCase,
@@ -97,6 +102,21 @@ export function buildUseCases(d: Deps) {
     oauthDecide: new DecideConsentUseCase(d),
     oauthToken: new TokenUseCase(d),
     mcp: new McpUseCase(d),
+
+    listRoutines: new ListRoutinesUseCase(d),
+    myRoutineWeek: new GetMyRoutineWeekUseCase(d),
+    getRoutineItem: new GetRoutineItemUseCase(d),
+    getRoutinePlan: new GetRoutinePlanUseCase(d),
+    validateRoutines: new ValidateRoutinesUseCase(d),
+    importRoutines: new ImportRoutinesUseCase(d),
+    updateRoutineItem: new UpdateRoutineItemUseCase(d),
+    updateRoutinePlan: new UpdateRoutinePlanUseCase(d),
+    patchRoutine: new PatchRoutineUseCase(d),
+    deleteRoutine: new DeleteRoutineUseCase(d),
+    exportRoutinePlan: new ExportRoutinePlanUseCase(d),
+    exportRoutineItem: new ExportRoutineItemUseCase(d),
+    setRoutineDays: new SetRoutineDaysUseCase(d),
+    getRoutineGuide: new GetRoutineGuideUseCase(d),
   };
 }
 

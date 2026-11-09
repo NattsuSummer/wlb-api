@@ -70,6 +70,24 @@ npm run dev         # wrangler dev (ต้อง migrate local ก่อน: npm
 
 สิทธิ์: คอร์ส `group` + `published` ทุกคนเห็น · `private` หรือร่าง เห็นเฉพาะผู้สร้าง (และ admin ในหน้า admin)
 
+## กิจวัตร (Routines) — ตารางออกกำลังกาย / ตารางอาหาร
+
+- **คลัง**: ท่าออกกำลังกาย (กล้ามเนื้อ, อุปกรณ์, เซ็ต/ครั้ง/วินาที, วิธีทำ) และเมนูอาหาร (มื้อ, วัตถุดิบ, วิธีทำ, kcal + P/C/F ต่อ 1 ที่)
+- **แผน**: workout = 1 ครั้งที่เล่น (warmup / main / cooldown) · meal = อาหาร 1 วัน (breakfast / lunch / dinner / snack) รวม kcal + P/C/F ให้
+- **ผูกกับสัปดาห์**: แต่ละคนผูกแผนกับวัน (และชั่วโมงได้ ไม่บังคับ) ของตัวเอง · เป็นไกด์ ไม่บันทึกว่าทำแล้ว
+- JSON รูปแบบเดียว `{ items: [...], plans: [...] }` · guide: `GET /api/routines/guide.md` (public)
+
+| Method | Path | ทำอะไร |
+|---|---|---|
+| GET | `/api/routines` | คลัง + แผน (พร้อมยอดรวม / นาที / วันที่ฉันผูกไว้) |
+| GET | `/api/routines/week` | แผนที่ฉันผูกกับแต่ละวัน/ชั่วโมง |
+| POST | `/api/routines/validate` · `/api/routines/import` | ตรวจ / สร้าง (API token → ร่าง) |
+| GET / PUT / PATCH / DELETE | `/api/routines/items/:id` · `/api/routines/plans/:id` | ดู / แก้ / visibility-status / ลบ (ท่าที่ยังอยู่ในแผนลบไม่ได้) |
+| GET | `/api/routines/{items,plans}/:id/export` | JSON ไว้แก้/นำเข้าใหม่ |
+| PUT | `/api/routines/plans/:id/days` | `{ days: [{ weekday: 0–6, hour: 0–23 \| null }] }` แทนที่ของเดิม |
+
+MCP tools: `get_routine_guide`, `list_routines`, `get_routine_plan`, `validate_routines`, `create_routines`, `update_routine_item`, `update_routine_plan`
+
 ## MCP connector (เฟส 4) — ให้ Claude เพิ่มคอร์สให้
 
 URL ของ connector: `https://balance-our-day-api.nattsummer-14.workers.dev/mcp`

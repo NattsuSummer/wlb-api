@@ -5,6 +5,7 @@ import { LIMITS } from '../../domain/course';
 import type { Actor } from '../../domain/user';
 import { GetImportGuideUseCase, ExportCourseUseCase, ImportCourseUseCase, ListCatalogUseCase, UpdateCourseUseCase, ValidateCourseUseCase } from '../courses';
 import type { Deps } from '../deps';
+import { ExportRoutinePlanUseCase, GetRoutineGuideUseCase, ImportRoutinesUseCase, ListRoutinesUseCase, UpdateRoutineItemUseCase, UpdateRoutinePlanUseCase, ValidateRoutinesUseCase } from '../routines';
 
 export const PROTOCOL_VERSIONS = ['2025-06-18', '2025-03-26', '2024-11-05'];
 
@@ -18,7 +19,10 @@ With these tools you can write courses for the signed-in user.
 3. Call validate_course, fix every error, then create_course. Warnings are fine.
 4. New courses are drafts visible only to the user unless they allowed direct publishing. Give the user the preview link from the result so they can check and publish.
 5. To change a course, call get_course, edit the JSON (keep lesson/exercise ids so learners keep their progress), then update_course. You can only update the user's own courses.
-Write course content in the language the user asks for (often Thai).`;
+Routines (exercise library, meal library, workout plans, one-day meal plans with calories and protein/carbs/fat):
+call get_routine_guide first, check list_routines so you reuse existing exercises/meals by title, validate_routines, then create_routines.
+Users link plans to days of their week in the site. Routines are general guidance, not medical advice.
+Write content in the language the user asks for (often Thai).`;
 
 const ex = { type: 'object', additionalProperties: true } as const;
 const COURSE_SCHEMA = {
@@ -65,6 +69,17 @@ const COURSE_SCHEMA = {
   },
 };
 
+const ROUTINES_SCHEMA = {
+  type: 'object',
+  description: 'Routines in the import format: { "items": [exercise or meal], "plans": [workout or meal plan] } (see get_routine_guide).',
+  properties: {
+    items: { type: 'array', items: { type: 'object', additionalProperties: true, required: ['kind', 'title'],
+      properties: { kind: { type: 'string', enum: ['exercise', 'meal'] }, title: { type: 'string' } } } },
+    plans: { type: 'array', items: { type: 'object', additionalProperties: true, required: ['kind', 'title', 'entries'],
+      properties: { kind: { type: 'string', enum: ['workout', 'meal'] }, title: { type: 'string' }, entries: { type: 'array', items: { type: 'object', additionalProperties: true } } } } },
+  },
+};
+
 const noArgs = { type: 'object', properties: {}, additionalProperties: false };
 const idArg = { course_id: { type: 'integer', description: 'Course id (from list_my_courses or create_course)' } };
 
@@ -76,6 +91,13 @@ export const TOOLS = [
   { name: 'get_course', title: 'Get a course as JSON', description: 'A course in the import format, with lesson and exercise ids, ready to edit and send to update_course.', inputSchema: { type: 'object', properties: idArg, required: ['course_id'] }, annotations: { readOnlyHint: true } },
   { name: 'validate_course', title: 'Check a course', description: 'Check a course without saving. Returns errors (must fix) and warnings (fine).', inputSchema: { type: 'object', properties: { course: COURSE_SCHEMA }, required: ['course'] }, annotations: { readOnlyHint: true } },
   { name: 'create_course', title: 'Create a course', description: 'Save a new course for the user. It is a draft (only the user sees it) unless they allowed direct publishing. Returns the preview link.', inputSchema: { type: 'object', properties: { course: COURSE_SCHEMA }, required: ['course'] }, annotations: { readOnlyHint: false, destructiveHint: false } },
+  { name: 'get_routine_guide', title: 'Read the routine format guide', description: 'Read before creating routines: JSON format for exercises, meals, workout plans and one-day meal plans, with an example.', inputSchema: noArgs, annotations: { readOnlyHint: true } },
+  { name: 'list_routines', title: 'List routines', description: 'Exercises, meals and plans in the library (reuse items by title instead of duplicating them).', inputSchema: noArgs, annotations: { readOnlyHint: true } },
+  { name: 'get_routine_plan', title: 'Get a plan as JSON', description: 'A plan with the items it uses, in the import format.', inputSchema: { type: 'object', properties: { plan_id: { type: 'integer' } }, required: ['plan_id'] }, annotations: { readOnlyHint: true } },
+  { name: 'validate_routines', title: 'Check routines', description: 'Check routines JSON without saving. Returns errors (must fix) and warnings.', inputSchema: { type: 'object', properties: { routines: ROUTINES_SCHEMA }, required: ['routines'] }, annotations: { readOnlyHint: true } },
+  { name: 'create_routines', title: 'Create routines', description: 'Save new exercises/meals and plans. Drafts unless the user allowed direct publishing. Returns links.', inputSchema: { type: 'object', properties: { routines: ROUTINES_SCHEMA }, required: ['routines'] }, annotations: { readOnlyHint: false, destructiveHint: false } },
+  { name: 'update_routine_item', title: 'Update one of my exercises/meals', description: 'Replace an exercise or meal the user created.', inputSchema: { type: 'object', properties: { item_id: { type: 'integer' }, item: { type: 'object', additionalProperties: true } }, required: ['item_id', 'item'] }, annotations: { readOnlyHint: false, destructiveHint: true } },
+  { name: 'update_routine_plan', title: 'Update one of my plans', description: 'Replace a plan the user created (title, description, entries). Items must already exist.', inputSchema: { type: 'object', properties: { plan_id: { type: 'integer' }, plan: { type: 'object', additionalProperties: true } }, required: ['plan_id', 'plan'] }, annotations: { readOnlyHint: false, destructiveHint: true } },
   { name: 'update_course', title: 'Update one of my courses', description: 'Replace a course the user created with new JSON. Keep lesson/exercise ids from get_course so learners keep their progress; lessons left out are removed.', inputSchema: { type: 'object', properties: { ...idArg, course: COURSE_SCHEMA }, required: ['course_id', 'course'] }, annotations: { readOnlyHint: false, destructiveHint: true } },
 ];
 
@@ -131,6 +153,7 @@ export class McpUseCase {
       if (typeof a.course !== 'object' || a.course === null) throw new AppError('validation', 'bad_request', 'course must be a JSON object');
       return a.course;
     };
+    if (name.includes('routine')) return this.callRoutine(actor, name, a);
     switch (name) {
       case 'get_import_guide': return new GetImportGuideUseCase(d).execute();
       case 'list_course_categories':
@@ -162,6 +185,58 @@ export class McpUseCase {
         if (!c || c.createdBy !== actor.id) throw new AppError('forbidden', 'forbidden', 'You can only update courses you created (see list_my_courses)');
         const r = await new UpdateCourseUseCase(d).execute(actor, id, course());
         return { id, url: this.link(id), warnings: r.warnings };
+      }
+    }
+    throw new AppError('not_found', 'not_found', 'Unknown tool');
+  }
+
+  private async callRoutine(actor: Actor, name: string, a: Json): Promise<unknown> {
+    const d = this.d;
+    const id = (k: string) => {
+      const v = a[k];
+      if (!Number.isInteger(v) || (v as number) < 1) throw new AppError('validation', 'bad_request', `${k} must be a positive integer`);
+      return v as number;
+    };
+    const obj = (k: string) => {
+      if (typeof a[k] !== 'object' || a[k] === null) throw new AppError('validation', 'bad_request', `${k} must be a JSON object`);
+      return a[k];
+    };
+    const link = (kind: 'items' | 'plans', i: number) => `${d.config.webUrl}/routines/${kind}/${i}`;
+    switch (name) {
+      case 'get_routine_guide': return new GetRoutineGuideUseCase(d).execute();
+      case 'list_routines': {
+        const r = await new ListRoutinesUseCase(d).execute(actor);
+        return {
+          items: r.items.map((i) => ({ id: i.id, kind: i.kind, title: i.title, ...(i.kind === 'exercise' ? { muscles: i.data.muscles } : { mealTypes: i.data.mealTypes, calories: i.data.calories }) })),
+          plans: r.plans.map((p) => ({ id: p.id, kind: p.kind, title: p.title, mine: p.mine })),
+        };
+      }
+      case 'get_routine_plan': return new ExportRoutinePlanUseCase(d).execute(actor, id('plan_id'));
+      case 'validate_routines': {
+        const v = await new ValidateRoutinesUseCase(d).execute(actor, obj('routines'));
+        return { ok: v.errors.length === 0, errors: v.errors, warnings: v.warnings };
+      }
+      case 'create_routines': {
+        const grant = await d.repos.oauth.findGrantByAccessToken(actor.tokenId);
+        const r = await new ImportRoutinesUseCase(d).execute(actor, obj('routines'), { status: grant?.autoPublish ? 'published' : 'draft' });
+        return {
+          status: r.status, warnings: r.warnings,
+          items: r.items.map((i) => ({ ...i, url: link('items', i.id) })),
+          plans: r.plans.map((p) => ({ ...p, url: link('plans', p.id) })),
+          note: r.status === 'draft' ? 'Saved as drafts. Share the plan urls with the user; they can check them, publish, and link plans to days of their week.' : 'Published to the group.',
+        };
+      }
+      case 'update_routine_item': {
+        const i = id('item_id');
+        const it = await d.repos.routines.findItem(i);
+        if (!it || it.createdBy !== actor.id) throw new AppError('forbidden', 'forbidden', 'You can only update items you created');
+        return { ...(await new UpdateRoutineItemUseCase(d).execute(actor, i, obj('item'))), url: link('items', i) };
+      }
+      case 'update_routine_plan': {
+        const i = id('plan_id');
+        const p = await d.repos.routines.findPlan(i);
+        if (!p || p.createdBy !== actor.id) throw new AppError('forbidden', 'forbidden', 'You can only update plans you created');
+        return { ...(await new UpdateRoutinePlanUseCase(d).execute(actor, i, obj('plan'))), url: link('plans', i) };
       }
     }
     throw new AppError('not_found', 'not_found', 'Unknown tool');

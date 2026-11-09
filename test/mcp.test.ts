@@ -166,7 +166,8 @@ describe('MCP tools', () => {
     const n = await call('POST', '/mcp', { token: access, body: { jsonrpc: '2.0', method: 'notifications/initialized' } });
     assert.equal(n.status, 202);
     const tools = (await rpc(access, 'tools/list')).result.tools.map((t: { name: string }) => t.name);
-    assert.deepEqual(tools, ['get_import_guide', 'list_course_categories', 'list_packs', 'list_my_courses', 'get_course', 'validate_course', 'create_course', 'update_course']);
+    assert.deepEqual(tools, ['get_import_guide', 'list_course_categories', 'list_packs', 'list_my_courses', 'get_course', 'validate_course', 'create_course',
+      'get_routine_guide', 'list_routines', 'get_routine_plan', 'validate_routines', 'create_routines', 'update_routine_item', 'update_routine_plan', 'update_course']);
     assert.equal((await rpc(access, 'nope')).error.code, -32601);
     assert.equal((await call('GET', '/mcp', { token: access })).status, 405);
   });
@@ -235,5 +236,28 @@ describe('tokens', () => {
     await call('DELETE', `/api/me/tokens/${list[0].id}`, { token: ploy });
     const dead = await call('POST', '/oauth/token', { form: { grant_type: 'refresh_token', refresh_token: r.body.refresh_token } });
     assert.equal(dead.body.error, 'invalid_grant');
+  });
+});
+
+describe('MCP routines', () => {
+  test('guide → create routines as drafts → get plan → update own plan', async () => {
+    const { EXAMPLE_ROUTINES } = await import('../src/domain/routine-guide');
+    const { access } = await connect(ploy);
+    assert.match((await tool(access, 'get_routine_guide')).data, /routine import guide/);
+    const v = await tool(access, 'validate_routines', { routines: { plans: [{ kind: 'meal', title: 'x', entries: [{ section: 'lunch', item: 'nope' }] }] } });
+    assert.equal(v.data.ok, false);
+    const c = await tool(access, 'create_routines', { routines: EXAMPLE_ROUTINES });
+    assert.equal(c.isError, false);
+    assert.equal(c.data.status, 'draft');
+    assert.equal(c.data.plans.length, 2);
+    assert.match(c.data.plans[0].url, /^https:\/\/web\.test\/routines\/plans\/\d+$/);
+    const list = await tool(access, 'list_routines');
+    assert.equal(list.data.items.length, 5);
+    const plan = await tool(access, 'get_routine_plan', { plan_id: c.data.plans[1].id });
+    const p = plan.data.plans[0];
+    p.title = 'Changed by AI';
+    assert.equal((await tool(access, 'update_routine_plan', { plan_id: p.id, plan: p })).isError, false);
+    const k = await connect(kim);
+    assert.equal((await tool(k.access, 'update_routine_plan', { plan_id: p.id, plan: p })).data.error, 'forbidden');
   });
 });

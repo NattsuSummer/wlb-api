@@ -3,6 +3,8 @@ import type { ApiTokenInfo, CourseCategory, TimeCategory } from '../domain/categ
 import type { Course, CourseDraft, CourseStatus, CourseSummary, Exercise, Lesson, Pack, Visibility } from '../domain/course';
 import type { OAuthClient } from '../domain/oauth';
 import type { Privacy } from '../domain/privacy';
+import type { Assignment, ExerciseData, ItemKind, MealData, PlanEntry, PlanKind, RoutineItem, RoutinePlan } from '../domain/routine';
+import type { Image, Link } from '../domain/course';
 import type { Slot, Week } from '../domain/schedule';
 import type { Actor, Locale, Role, Theme, User, UserCredentials } from '../domain/user';
 
@@ -156,6 +158,37 @@ export interface OAuthRepository {
   rotateGrant(id: number, refreshHash: string, accessTokenId: string, refreshExpiresAt: string): Promise<void>;
 }
 
+export interface ItemWrite {
+  kind: ItemKind; title: string; description: string; bodyMd: string; images: Image[]; links: Link[];
+  visibility: Visibility; status: CourseStatus; data: ExerciseData | MealData;
+}
+export interface PlanWrite {
+  kind: PlanKind; title: string; description: string; visibility: Visibility; status: CourseStatus;
+  entries: Omit<PlanEntry, 'id' | 'planId' | 'sort'>[];
+}
+
+export interface RoutineRepository {
+  listItems(): Promise<RoutineItem[]>;
+  findItem(id: number): Promise<RoutineItem | null>;
+  createItem(w: ItemWrite, createdBy: number): Promise<number>;
+  updateItem(id: number, w: ItemWrite): Promise<void>;
+  patchItem(id: number, p: { visibility?: Visibility; status?: CourseStatus }): Promise<void>;
+  deleteItem(id: number): Promise<boolean>;
+  /** How many plan entries use this item. */
+  itemUsage(id: number): Promise<number>;
+  listPlans(): Promise<RoutinePlan[]>;
+  findPlan(id: number): Promise<RoutinePlan | null>;
+  entries(planId: number): Promise<PlanEntry[]>;
+  allEntries(): Promise<PlanEntry[]>;
+  createPlan(w: PlanWrite, createdBy: number): Promise<number>;
+  replacePlan(id: number, w: PlanWrite): Promise<void>;
+  patchPlan(id: number, p: { visibility?: Visibility; status?: CourseStatus }): Promise<void>;
+  deletePlan(id: number): Promise<boolean>;
+  assignments(userId: number): Promise<Assignment[]>;
+  /** Replace this user's links for one plan. */
+  setAssignments(userId: number, planId: number, slots: { weekday: number; hour: number | null }[]): Promise<void>;
+}
+
 export interface Repositories {
   users: UserRepository;
   tokens: TokenRepository;
@@ -165,6 +198,7 @@ export interface Repositories {
   courses: CourseRepository;
   progress: ProgressRepository;
   oauth: OAuthRepository;
+  routines: RoutineRepository;
   schedules: ScheduleRepository;
   privacy: PrivacyRepository;
 }
