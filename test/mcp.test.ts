@@ -167,7 +167,7 @@ describe('MCP tools', () => {
     assert.equal(n.status, 202);
     const tools = (await rpc(access, 'tools/list')).result.tools.map((t: { name: string }) => t.name);
     assert.deepEqual(tools, ['get_import_guide', 'list_course_categories', 'list_packs', 'list_my_courses', 'get_course', 'validate_course', 'create_course',
-      'get_routine_guide', 'list_routines', 'get_routine_plan', 'validate_routines', 'create_routines', 'update_routine_item', 'update_routine_plan', 'update_course']);
+      'get_routine_guide', 'list_routines', 'get_routine_plan', 'validate_routines', 'create_routines', 'update_routine_item', 'update_routine_plan', 'get_my_body_stats', 'update_course']);
     assert.equal((await rpc(access, 'nope')).error.code, -32601);
     assert.equal((await call('GET', '/mcp', { token: access })).status, 405);
   });

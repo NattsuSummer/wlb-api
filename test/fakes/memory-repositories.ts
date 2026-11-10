@@ -113,6 +113,10 @@ export function memoryRepositories(categories: Omit<TimeCategory, 'sort'>[] = DE
       allEntries: async () => [], createPlan: notInMemory, replacePlan: notInMemory, patchPlan: notInMemory, deletePlan: notInMemory,
       assignments: async () => [], setAssignments: notInMemory,
     },
+    body: {
+      entries: async () => [], upsertEntry: notInMemory, deleteEntry: async () => false, lastEntry: async () => null,
+      goal: async () => ({ targetWeightKg: null }), setGoal: notInMemory,
+    },
     privacy: {
       load: async (uid) => ({ ...(privacy.get(uid) ?? DEFAULT_PRIVACY) }),
       save: async (uid, p) => { privacy.set(uid, { ...p }); },

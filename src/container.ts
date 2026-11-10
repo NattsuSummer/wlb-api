@@ -22,6 +22,7 @@ import {
   GetRoutinePlanUseCase, ImportRoutinesUseCase, ListRoutinesUseCase, PatchRoutineUseCase, SetRoutineDaysUseCase, UpdateRoutineItemUseCase,
   UpdateRoutinePlanUseCase, ValidateRoutinesUseCase,
 } from './usecases/routines';
+import { DeleteBodyEntryUseCase, GetBodyStatsUseCase, SaveBodyEntryUseCase, SetBodyGoalUseCase } from './usecases/body';
 import { DecideConsentUseCase, GetConsentUseCase, RegisterClientUseCase, StartAuthorizeUseCase, TokenUseCase } from './usecases/oauth';
 import {
   CreateApiTokenUseCase, GetMeUseCase, GetPrivacyUseCase, ListMyTokensUseCase, RevokeMyTokenUseCase, UpdatePrivacyUseCase, UpdateProfileUseCase,
@@ -117,6 +118,10 @@ export function buildUseCases(d: Deps) {
     exportRoutineItem: new ExportRoutineItemUseCase(d),
     setRoutineDays: new SetRoutineDaysUseCase(d),
     getRoutineGuide: new GetRoutineGuideUseCase(d),
+    getBodyStats: new GetBodyStatsUseCase(d),
+    saveBodyEntry: new SaveBodyEntryUseCase(d),
+    deleteBodyEntry: new DeleteBodyEntryUseCase(d),
+    setBodyGoal: new SetBodyGoalUseCase(d),
   };
 }
 

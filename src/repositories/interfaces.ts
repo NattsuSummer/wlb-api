@@ -3,6 +3,7 @@ import type { ApiTokenInfo, CourseCategory, TimeCategory } from '../domain/categ
 import type { Course, CourseDraft, CourseStatus, CourseSummary, Exercise, Lesson, Pack, Visibility } from '../domain/course';
 import type { OAuthClient } from '../domain/oauth';
 import type { Privacy } from '../domain/privacy';
+import type { BodyEntry, BodyGoal } from '../domain/body';
 import type { Assignment, ExerciseData, ItemKind, MealData, PlanEntry, PlanKind, RoutineItem, RoutinePlan } from '../domain/routine';
 import type { Image, Link } from '../domain/course';
 import type { Slot, Week } from '../domain/schedule';
@@ -199,6 +200,16 @@ export interface Repositories {
   progress: ProgressRepository;
   oauth: OAuthRepository;
   routines: RoutineRepository;
+  body: BodyRepository;
   schedules: ScheduleRepository;
   privacy: PrivacyRepository;
+}
+
+export interface BodyRepository {
+  entries(userId: number): Promise<BodyEntry[]>; // oldest first
+  upsertEntry(userId: number, e: BodyEntry): Promise<void>;
+  deleteEntry(userId: number, date: string): Promise<boolean>;
+  lastEntry(userId: number): Promise<BodyEntry | null>;
+  goal(userId: number): Promise<BodyGoal>;
+  setGoal(userId: number, g: BodyGoal): Promise<void>;
 }

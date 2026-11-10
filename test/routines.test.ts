@@ -166,3 +166,24 @@ describe('linking plans to my week', () => {
     assert.ok(Array.isArray(now.body.routinesToday));
   });
 });
+
+describe('recipes', () => {
+  test('meal recipe fields round-trip and are validated', async () => {
+    const meal = { kind: 'meal', title: 'Air-fryer chicken thigh', mealTypes: ['lunch'], calories: 300, protein: 30, carbs: 2, fat: 19,
+      ingredients: ['150 g chicken thigh', '1 tbsp soy sauce'], steps: '1. Marinate\n2. Air fry 180°C 18 min',
+      prepMinutes: 35, cookMinutes: 18, makes: 2, tools: ['air fryer'], tips: 'Do not overcook.' };
+    const r = await call('POST', '/api/routines/import', { token: kim, body: meal });
+    assert.equal(r.status, 201, JSON.stringify(r.body));
+    const id = r.body.items[0].id;
+    const got = await call('GET', `/api/routines/items/${id}`, { token: kim });
+    assert.equal(got.body.item.data.cookMinutes, 18);
+    assert.deepEqual(got.body.item.data.tools, ['air fryer']);
+    const ex = await call('GET', `/api/routines/items/${id}/export`, { token: kim });
+    const back = ex.body.items?.[0] ?? ex.body;
+    assert.equal(back.prepMinutes, 35);
+    assert.equal(back.makes, 2);
+    assert.equal(back.tips, 'Do not overcook.');
+    const bad = await call('POST', '/api/routines/validate', { token: kim, body: { ...meal, cookMinutes: 9999 } });
+    assert.ok(bad.body.errors.some((e: { path: string }) => e.path === 'cookMinutes'));
+  });
+});

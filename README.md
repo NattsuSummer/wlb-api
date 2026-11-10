@@ -88,6 +88,19 @@ npm run dev         # wrangler dev (ต้อง migrate local ก่อน: npm
 
 MCP tools: `get_routine_guide`, `list_routines`, `get_routine_plan`, `validate_routines`, `create_routines`, `update_routine_item`, `update_routine_plan`
 
+## สถิติร่างกาย (Body stats)
+
+บันทึกน้ำหนัก (บังคับ) ส่วนสูง รอบเอว %ไขมัน สัปดาห์ละครั้ง — **เห็นเฉพาะเจ้าของ** (admin ก็ไม่เห็น) · วันละ 1 รายการ บันทึกซ้ำวันเดิม = แก้
+
+| Method | Path | หมายเหตุ |
+|---|---|---|
+| GET | `/api/body` | `{ today, entries[], goal, summary }` — summary: ล่าสุด, BMI (ใช้ส่วนสูงล่าสุดที่กรอก), เปลี่ยนตั้งแต่เริ่ม/สัปดาห์ล่าสุด/เฉลี่ยต่อสัปดาห์, ห่างเป้า, `due` (ครบ 7 วัน) |
+| PUT | `/api/body/entries/:date` | `{ weightKg, heightCm?, waistCm?, bodyFat?, note? }` · date = YYYY-MM-DD ไม่เกินวันนี้ (เวลาไทย) |
+| DELETE | `/api/body/entries/:date` | |
+| PUT | `/api/body/goal` | `{ targetWeightKg: number \| null }` |
+
+`/api/now` มี `bodyCheck: { due, lastDate, daysSinceLast, weightKg }` สำหรับเตือนในหน้าแรก · MCP มี `get_my_body_stats` (อ่านอย่างเดียว ของตัวเอง)
+
 ## MCP connector (เฟส 4) — ให้ Claude เพิ่มคอร์สให้
 
 URL ของ connector: `https://balance-our-day-api.nattsummer-14.workers.dev/mcp`

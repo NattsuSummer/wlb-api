@@ -1,5 +1,6 @@
 // MCP server (Streamable HTTP, JSON responses). Lets an AI assistant such as Claude read the guide and
 // create / update the user's courses. Courses arrive as drafts unless the user allowed direct publishing.
+import { GetBodyStatsUseCase } from '../body';
 import { AppError } from '../../domain/errors';
 import { LIMITS } from '../../domain/course';
 import type { Actor } from '../../domain/user';
@@ -22,6 +23,7 @@ With these tools you can write courses for the signed-in user.
 Routines (exercise library, meal library, workout plans, one-day meal plans with calories and protein/carbs/fat):
 call get_routine_guide first, check list_routines so you reuse existing exercises/meals by title, validate_routines, then create_routines.
 Users link plans to days of their week in the site. Routines are general guidance, not medical advice.
+get_my_body_stats reads the user's own weekly weight/height/waist/body-fat check-ins (private, read-only) so you can size meal plans; never share them.
 Write content in the language the user asks for (often Thai).`;
 
 const ex = { type: 'object', additionalProperties: true } as const;
@@ -98,6 +100,7 @@ export const TOOLS = [
   { name: 'create_routines', title: 'Create routines', description: 'Save new exercises/meals and plans. Drafts unless the user allowed direct publishing. Returns links.', inputSchema: { type: 'object', properties: { routines: ROUTINES_SCHEMA }, required: ['routines'] }, annotations: { readOnlyHint: false, destructiveHint: false } },
   { name: 'update_routine_item', title: 'Update one of my exercises/meals', description: 'Replace an exercise or meal the user created.', inputSchema: { type: 'object', properties: { item_id: { type: 'integer' }, item: { type: 'object', additionalProperties: true } }, required: ['item_id', 'item'] }, annotations: { readOnlyHint: false, destructiveHint: true } },
   { name: 'update_routine_plan', title: 'Update one of my plans', description: 'Replace a plan the user created (title, description, entries). Items must already exist.', inputSchema: { type: 'object', properties: { plan_id: { type: 'integer' }, plan: { type: 'object', additionalProperties: true } }, required: ['plan_id', 'plan'] }, annotations: { readOnlyHint: false, destructiveHint: true } },
+  { name: 'get_my_body_stats', title: 'Read my body stats', description: "The signed-in user's own weekly check-ins (weight, height, waist, body fat), goal weight and trend. Private to the user; read-only.", inputSchema: noArgs, annotations: { readOnlyHint: true } },
   { name: 'update_course', title: 'Update one of my courses', description: 'Replace a course the user created with new JSON. Keep lesson/exercise ids from get_course so learners keep their progress; lessons left out are removed.', inputSchema: { type: 'object', properties: { ...idArg, course: COURSE_SCHEMA }, required: ['course_id', 'course'] }, annotations: { readOnlyHint: false, destructiveHint: true } },
 ];
 
@@ -154,6 +157,7 @@ export class McpUseCase {
       return a.course;
     };
     if (name.includes('routine')) return this.callRoutine(actor, name, a);
+    if (name === 'get_my_body_stats') return new GetBodyStatsUseCase(d).execute(actor);
     switch (name) {
       case 'get_import_guide': return new GetImportGuideUseCase(d).execute();
       case 'list_course_categories':

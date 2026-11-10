@@ -17,7 +17,11 @@ export const sectionsFor = (k: PlanKind): readonly string[] => (k === 'workout' 
 
 export interface ExerciseData { muscles: Muscle[]; equipment: string; sets: number | null; reps: string | null; seconds: number | null }
 export interface Nutrition { calories: number | null; protein: number | null; carbs: number | null; fat: number | null }
-export interface MealData extends Nutrition { mealTypes: MealType[]; ingredients: string[]; servingNote: string }
+export interface MealData extends Nutrition {
+  mealTypes: MealType[]; ingredients: string[]; servingNote: string;
+  // recipe extras (optional; older meals may not have them)
+  prepMinutes?: number | null; cookMinutes?: number | null; makes?: number | null; tools?: string[]; tips?: string;
+}
 
 interface ItemBase {
   id: number; title: string; description: string; bodyMd: string; images: Image[]; links: Link[];
@@ -209,6 +213,8 @@ export function validateRoutines(input: unknown, library: Known[]): RoutineValid
         ingredients: strList(raw.ingredients, at(p, 'ingredients')),
         servingNote: text(raw.serving ?? raw.servingNote, at(p, 'serving'), 100),
         calories: n('calories'), protein: n('protein'), carbs: n('carbs'), fat: n('fat'),
+        prepMinutes: num(raw.prepMinutes, at(p, 'prepMinutes'), 0, 600), cookMinutes: num(raw.cookMinutes, at(p, 'cookMinutes'), 0, 600),
+        makes: num(raw.makes, at(p, 'makes'), 1, 50), tools: strList(raw.tools, at(p, 'tools')), tips: text(raw.tips, at(p, 'tips'), 2000),
       };
       const m = data as MealData;
       if (m.calories === null) warn(at(p, 'calories'), 'No calories: daily totals will be incomplete');
@@ -290,7 +296,9 @@ export function itemToJson(it: RoutineItem) {
   }
   const d = it.data;
   return { ...common, mealTypes: d.mealTypes, ...(d.servingNote ? { serving: d.servingNote } : {}), calories: d.calories, protein: d.protein,
-    carbs: d.carbs, fat: d.fat, ingredients: d.ingredients, steps: it.bodyMd };
+    carbs: d.carbs, fat: d.fat, ingredients: d.ingredients, steps: it.bodyMd,
+    ...(d.prepMinutes != null ? { prepMinutes: d.prepMinutes } : {}), ...(d.cookMinutes != null ? { cookMinutes: d.cookMinutes } : {}),
+    ...(d.makes != null ? { makes: d.makes } : {}), ...(d.tools?.length ? { tools: d.tools } : {}), ...(d.tips ? { tips: d.tips } : {}) };
 }
 
 export function planToJson(p: RoutinePlan, entries: PlanEntry[], items: Map<number, RoutineItem>) {
