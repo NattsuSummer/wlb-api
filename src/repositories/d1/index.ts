@@ -4,6 +4,7 @@ import { D1CourseRepository, D1PackRepository, D1ProgressRepository } from './co
 import type { D1Database } from './db';
 import { D1OAuthRepository } from './oauth-repository';
 import { D1RoutineRepository } from './routine-repository';
+import { D1BodyRepository } from './body-repository';
 import { D1PrivacyRepository } from './privacy-repository';
 import { D1ScheduleRepository } from './schedule-repository';
 import { D1TokenRepository } from './token-repository';
@@ -20,6 +21,7 @@ export function d1Repositories(db: D1Database): Repositories {
     progress: new D1ProgressRepository(db),
     oauth: new D1OAuthRepository(db),
     routines: new D1RoutineRepository(db),
+    body: new D1BodyRepository(db),
     schedules: new D1ScheduleRepository(db),
     privacy: new D1PrivacyRepository(db),
   };

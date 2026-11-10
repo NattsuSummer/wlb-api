@@ -14,7 +14,8 @@ export const EXAMPLE_ROUTINES = {
       steps: 'Slice the banana onto the yogurt and add honey.' },
     { kind: 'meal', title: 'Grilled chicken breast with rice', mealTypes: ['lunch', 'dinner'], serving: '1 plate',
       calories: 520, protein: 45, carbs: 60, fat: 10, ingredients: ['150 g chicken breast', '1 cup cooked jasmine rice', 'Cucumber, tomato'],
-      steps: '1. Season the chicken with salt, pepper and garlic\n2. Grill 5–6 min per side\n3. Serve with rice and vegetables' },
+      steps: '1. Season the chicken with salt, pepper and garlic\n2. Grill 5–6 min per side\n3. Serve with rice and vegetables',
+      prepMinutes: 10, cookMinutes: 12, makes: 1, tools: ['grill pan'], tips: 'Rest the chicken 3 minutes before slicing so it stays juicy.' },
   ],
   plans: [
     { kind: 'workout', title: 'Beginner full body A', description: '20–25 minutes, no equipment',
@@ -56,7 +57,10 @@ Write titles and text in the language the user asks for (Thai is common); keys a
     { "kind": "meal", "title": string, "mealTypes": [${MEAL_TYPES.map((m) => `"${m}"`).join(' | ')}],
       "serving": what one serving is, e.g. "1 plate",
       "calories": kcal per serving, "protein" / "carbs" / "fat": grams per serving,
-      "ingredients": [strings with amounts], "steps": Markdown, "description", "images", "links", "visibility" }
+      "ingredients": [strings with amounts], "steps": Markdown numbered list (one action per step, with times and heat),
+      "prepMinutes" / "cookMinutes": numbers, "makes": how many servings the recipe makes (amounts are for that many),
+      "tools": ["air fryer", ...], "tips": Markdown (swaps, storage, how to keep it tender),
+      "description", "images", "links", "visibility" }
   ],
   "plans": [   // ≤ ${RLIMITS.plans}
     { "kind": "workout" | "meal", "title": string, "description": string, "visibility": "group" | "private",
