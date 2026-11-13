@@ -43,4 +43,5 @@ Dependencies point **inward only**: `domain` imports nothing; `usecases` know on
 - `test/mcp.test.ts` — OAuth (register → authorize → consent → token → refresh → revoke) + MCP tools
 - `test/routines.test.ts` — กิจวัตร (import, ยอดรวม, สิทธิ์, ผูกวัน)
 - `test/body.test.ts` — สถิติร่างกาย (ส่วนตัว, บันทึกทับวันเดิม, สรุป, เป้า, เตือนในหน้าแรก)
+- `test/projects.test.ts` — โปรเจค (สมาชิก/สิทธิ์, วันทำงานสลับ, งาน, daily, sprint review, version, ปฏิทิน, retro)
 - `test/seed.test.ts` — seed builder

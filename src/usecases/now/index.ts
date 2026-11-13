@@ -3,6 +3,7 @@ import type { Actor } from '../../domain/user';
 import type { Deps } from '../deps';
 import { todaysRoutines } from '../routines';
 import { bodyCheck } from '../body';
+import { projectsToday } from '../projects';
 
 /** Home page: what is planned right now for me and for everyone I'm allowed to see. */
 export class GetNowUseCase {
@@ -15,6 +16,7 @@ export class GetNowUseCase {
     return {
       routinesToday: await todaysRoutines(this.d, actor, at),
       bodyCheck: await bodyCheck(this.d, actor, at),
+      projectsToday: await projectsToday(this.d, actor, at),
       at: at.toISOString(),
       bangkok: bangkokNow(at),
       me: cards.find((c) => c.isMe) ?? null,

@@ -4,6 +4,7 @@ import type { Course, CourseDraft, CourseStatus, CourseSummary, Exercise, Lesson
 import type { OAuthClient } from '../domain/oauth';
 import type { Privacy } from '../domain/privacy';
 import type { BodyEntry, BodyGoal } from '../domain/body';
+import type { Daily, DailyReply, EventWrite, Load, Project, ProjectEvent, ProjectMember, ProjectWrite, Retro, RetroCard, RetroCol, RetroPhase, SprintReview, Task, TaskWrite, Version, VersionWrite } from '../domain/project';
 import type { Assignment, ExerciseData, ItemKind, MealData, PlanEntry, PlanKind, RoutineItem, RoutinePlan } from '../domain/routine';
 import type { Image, Link } from '../domain/course';
 import type { Slot, Week } from '../domain/schedule';
@@ -201,6 +202,7 @@ export interface Repositories {
   oauth: OAuthRepository;
   routines: RoutineRepository;
   body: BodyRepository;
+  projects: ProjectRepository;
   schedules: ScheduleRepository;
   privacy: PrivacyRepository;
 }
@@ -212,4 +214,58 @@ export interface BodyRepository {
   lastEntry(userId: number): Promise<BodyEntry | null>;
   goal(userId: number): Promise<BodyGoal>;
   setGoal(userId: number, g: BodyGoal): Promise<void>;
+}
+
+export interface ProjectRepository {
+  list(userId: number | null): Promise<Project[]>; // null = all (admin)
+  find(id: number): Promise<Project | null>;
+  create(w: ProjectWrite, createdBy: number): Promise<number>;
+  update(id: number, w: ProjectWrite): Promise<void>;
+  remove(id: number): Promise<void>;
+  members(projectId: number): Promise<ProjectMember[]>;
+  membersOfMany(projectIds: number[]): Promise<(ProjectMember & { projectId: number })[]>;
+  setMembers(projectId: number, members: ProjectMember[]): Promise<void>;
+  setMemberDays(projectId: number, userId: number, days: ProjectMember['days']): Promise<void>;
+
+  tasks(projectId: number): Promise<Task[]>;
+  findTask(id: number): Promise<Task | null>;
+  createTask(projectId: number, w: TaskWrite, createdBy: number): Promise<number>;
+  updateTask(id: number, w: TaskWrite, doneAt: string | null): Promise<void>;
+  deleteTask(id: number): Promise<void>;
+
+  versions(projectId: number): Promise<Version[]>;
+  findVersion(id: number): Promise<Version | null>;
+  createVersion(projectId: number, w: VersionWrite): Promise<number>;
+  updateVersion(id: number, w: VersionWrite): Promise<void>;
+  deleteVersion(id: number): Promise<void>;
+
+  dailies(projectId: number, from: string, to: string): Promise<Daily[]>;
+  lastDaily(projectId: number, userId: number, before: string): Promise<Daily | null>;
+  findDaily(id: number): Promise<Daily | null>;
+  upsertDaily(d: Omit<Daily, 'id' | 'createdAt'>): Promise<void>;
+  deleteDaily(projectId: number, userId: number, date: string): Promise<boolean>;
+  replies(dailyIds: number[]): Promise<DailyReply[]>;
+  addReply(dailyId: number, userId: number, text: string): Promise<void>;
+  todaysDailies(userId: number, date: string): Promise<number[]>; // project ids with a daily today
+
+  reviews(projectId: number, sprintNo: number): Promise<SprintReview[]>;
+  setReview(projectId: number, sprintNo: number, userId: number, load: Load, note: string): Promise<void>;
+
+  events(projectId: number): Promise<ProjectEvent[]>;
+  findEvent(id: number): Promise<ProjectEvent | null>;
+  createEvent(projectId: number, w: EventWrite): Promise<number>;
+  updateEvent(id: number, w: EventWrite): Promise<void>;
+  deleteEvent(id: number): Promise<void>;
+
+  retros(projectId: number): Promise<Retro[]>;
+  findRetro(id: number): Promise<Retro | null>;
+  createRetro(projectId: number, title: string, date: string): Promise<number>;
+  setRetroPhase(id: number, phase: RetroPhase): Promise<void>;
+  deleteRetro(id: number): Promise<void>;
+  cards(retroId: number): Promise<RetroCard[]>;
+  findCard(id: number): Promise<RetroCard | null>;
+  addCard(retroId: number, userId: number, col: RetroCol, text: string, anonymous: boolean): Promise<number>;
+  deleteCard(id: number): Promise<void>;
+  toggleVote(cardId: number, userId: number): Promise<void>;
+  setCardAction(cardId: number, taskId: number): Promise<void>;
 }

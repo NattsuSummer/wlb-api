@@ -6,6 +6,7 @@ import { coursesController } from './controllers/courses-controller';
 import { mcpController } from './controllers/mcp-controller';
 import { routinesController } from './controllers/routines-controller';
 import { bodyController } from './controllers/body-controller';
+import { projectsController } from './controllers/projects-controller';
 import { oauthController } from './controllers/oauth-controller';
 import { categoriesController } from './controllers/categories-controller';
 import { meController } from './controllers/me-controller';
@@ -28,6 +29,7 @@ oauthController(router);
 mcpController(router);
 routinesController(router);
 bodyController(router);
+projectsController(router);
 
 // While a user must change their password, only these endpoints work.
 const ALLOWED_BEFORE_PASSWORD_CHANGE = new Set(['/api/me', '/api/me/password', '/api/auth/logout']);

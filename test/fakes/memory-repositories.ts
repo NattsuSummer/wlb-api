@@ -113,6 +113,7 @@ export function memoryRepositories(categories: Omit<TimeCategory, 'sort'>[] = DE
       allEntries: async () => [], createPlan: notInMemory, replacePlan: notInMemory, patchPlan: notInMemory, deletePlan: notInMemory,
       assignments: async () => [], setAssignments: notInMemory,
     },
+    projects: new Proxy({}, { get: (_t, k) => (k === 'list' || k === 'todaysDailies' || k === 'membersOfMany' ? async () => [] : notInMemory) }) as never,
     body: {
       entries: async () => [], upsertEntry: notInMemory, deleteEntry: async () => false, lastEntry: async () => null,
       goal: async () => ({ targetWeightKg: null }), setGoal: notInMemory,

@@ -22,6 +22,7 @@ import {
   GetRoutinePlanUseCase, ImportRoutinesUseCase, ListRoutinesUseCase, PatchRoutineUseCase, SetRoutineDaysUseCase, UpdateRoutineItemUseCase,
   UpdateRoutinePlanUseCase, ValidateRoutinesUseCase,
 } from './usecases/routines';
+import * as P from './usecases/projects';
 import { DeleteBodyEntryUseCase, GetBodyStatsUseCase, SaveBodyEntryUseCase, SetBodyGoalUseCase } from './usecases/body';
 import { DecideConsentUseCase, GetConsentUseCase, RegisterClientUseCase, StartAuthorizeUseCase, TokenUseCase } from './usecases/oauth';
 import {
@@ -122,6 +123,41 @@ export function buildUseCases(d: Deps) {
     saveBodyEntry: new SaveBodyEntryUseCase(d),
     deleteBodyEntry: new DeleteBodyEntryUseCase(d),
     setBodyGoal: new SetBodyGoalUseCase(d),
+    listProjects: new P.ListProjectsUseCase(d),
+    createProject: new P.CreateProjectUseCase(d),
+    getProject: new P.GetProjectUseCase(d),
+    updateProject: new P.UpdateProjectUseCase(d),
+    deleteProject: new P.DeleteProjectUseCase(d),
+    setProjectMembers: new P.SetProjectMembersUseCase(d),
+    setMyProjectDays: new P.SetMyProjectDaysUseCase(d),
+    listTasks: new P.ListTasksUseCase(d),
+    createTask: new P.CreateTaskUseCase(d),
+    updateTask: new P.UpdateTaskUseCase(d),
+    deleteTask: new P.DeleteTaskUseCase(d),
+    listDailies: new P.ListDailiesUseCase(d),
+    saveDaily: new P.SaveDailyUseCase(d),
+    deleteDaily: new P.DeleteDailyUseCase(d),
+    replyDaily: new P.ReplyDailyUseCase(d),
+    getSprint: new P.GetSprintUseCase(d),
+    saveSprintReview: new P.SaveSprintReviewUseCase(d),
+    carryOver: new P.CarryOverUseCase(d),
+    createVersion: new P.CreateVersionUseCase(d),
+    updateVersion: new P.UpdateVersionUseCase(d),
+    deleteVersion: new P.DeleteVersionUseCase(d),
+    versionChangelog: new P.VersionChangelogUseCase(d),
+    getCalendar: new P.GetCalendarUseCase(d),
+    createEvent: new P.CreateEventUseCase(d),
+    updateEvent: new P.UpdateEventUseCase(d),
+    deleteEvent: new P.DeleteEventUseCase(d),
+    listRetros: new P.ListRetrosUseCase(d),
+    createRetro: new P.CreateRetroUseCase(d),
+    getRetro: new P.GetRetroUseCase(d),
+    setRetroPhase: new P.SetRetroPhaseUseCase(d),
+    deleteRetro: new P.DeleteRetroUseCase(d),
+    addRetroCard: new P.AddRetroCardUseCase(d),
+    deleteRetroCard: new P.DeleteRetroCardUseCase(d),
+    voteRetroCard: new P.VoteRetroCardUseCase(d),
+    retroAction: new P.RetroActionUseCase(d),
   };
 }
 
