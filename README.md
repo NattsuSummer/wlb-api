@@ -101,6 +101,31 @@ MCP tools: `get_routine_guide`, `list_routines`, `get_routine_plan`, `validate_r
 
 `/api/now` มี `bodyCheck: { due, lastDate, daysSinceLast, weightKg }` สำหรับเตือนในหน้าแรก · MCP มี `get_my_body_stats` (อ่านอย่างเดียว ของตัวเอง)
 
+## โปรเจค (Projects)
+
+ติดตามงานโปรเจคเสริมของกลุ่มแบบ agile — **เห็นเฉพาะสมาชิกโปรเจค (และ admin)** · เจ้าของ (owner) แก้ข้อมูล/สมาชิก/ลบ · สมาชิกทุกคนทำงานอื่นได้หมด
+
+- ข้อมูลโปรเจค: ชื่อ, รายละเอียด, git repo, ลิงก์อ้างอิง (refs), วันเริ่ม Sprint 1, ตัด version ทุกกี่สัปดาห์, เวลา review/retro
+- วันทำงานของสมาชิก: `{ weekly: [0..6], alternate: [a, b] | null }` (0 = จันทร์; alternate = วันที่สลับกัน sprint คี่/คู่)
+- Sprint = 7 วันนับจาก `sprintAnchor` · Version ช่วงที่ k = sprint (k-1)·w+1 … k·w
+- ปฏิทินสร้างอัตโนมัติ: review + planning ทุกวันเริ่ม sprint, retro วันเริ่ม sprint แรกของเดือน (ถ้ามี event ประเภทนั้นในสัปดาห์/เดือนเดียวกัน ตัวอัตโนมัติจะหาย = เลื่อนนัด) + วันตัด/ release ของแต่ละ version + event ที่เพิ่มเอง
+- Retro: เขียน (การ์ดคนอื่นถูกซ่อน) → เปิดพร้อมกัน + โหวต → ปิด · การ์ดไม่ระบุชื่อได้ · การ์ด → งานใน sprint ถัดไป
+
+| Method | Path |
+|---|---|
+| GET/POST | `/api/projects` |
+| GET/PATCH/DELETE | `/api/projects/:id` |
+| PUT | `/api/projects/:id/members` `{ members: [{ userId, role, days? }] }` · `/api/projects/:id/my-days` |
+| GET/POST, PATCH/DELETE | `/api/projects/:id/tasks`, `/tasks/:tid` |
+| GET, PUT/DELETE, POST | `/api/projects/:id/dailies?from&to`, `/dailies/:date`, `/dailies/:did/replies` |
+| GET, PUT, POST | `/api/projects/:id/sprints/:no\|current`, `/sprints/:no/review`, `/sprints/:no/carry-over` |
+| POST, PATCH/DELETE, GET | `/api/projects/:id/versions`, `/versions/:vid`, `/versions/:vid/changelog` |
+| GET, POST, PATCH/DELETE | `/api/projects/:id/calendar?from&to`, `/events`, `/events/:eid` |
+| GET/POST, GET/PATCH/DELETE | `/api/projects/:id/retros`, `/retros/:rid` (PATCH `{ phase }`) |
+| POST, DELETE, POST, POST | `/retros/:rid/cards`, `/cards/:cid`, `/cards/:cid/vote`, `/cards/:cid/action` |
+
+`/api/now` มี `projectsToday` (โปรเจคที่วันนี้เป็นวันทำงานของฉัน + ส่ง daily แล้วหรือยัง) · MCP: `list_projects`, `get_project_board`, `get_sprint`, `get_project_dailies`, `add_project_tasks`
+
 ## MCP connector (เฟส 4) — ให้ Claude เพิ่มคอร์สให้
 
 URL ของ connector: `https://balance-our-day-api.nattsummer-14.workers.dev/mcp`

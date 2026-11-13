@@ -1,7 +1,8 @@
 // MCP server (Streamable HTTP, JSON responses). Lets an AI assistant such as Claude read the guide and
 // create / update the user's courses. Courses arrive as drafts unless the user allowed direct publishing.
 import { GetBodyStatsUseCase } from '../body';
-import { AppError } from '../../domain/errors';
+import * as P from '../projects';
+import { AppError, validationError } from '../../domain/errors';
 import { LIMITS } from '../../domain/course';
 import type { Actor } from '../../domain/user';
 import { GetImportGuideUseCase, ExportCourseUseCase, ImportCourseUseCase, ListCatalogUseCase, UpdateCourseUseCase, ValidateCourseUseCase } from '../courses';
@@ -23,6 +24,7 @@ With these tools you can write courses for the signed-in user.
 Routines (exercise library, meal library, workout plans, one-day meal plans with calories and protein/carbs/fat):
 call get_routine_guide first, check list_routines so you reuse existing exercises/meals by title, validate_routines, then create_routines.
 Users link plans to days of their week in the site. Routines are general guidance, not medical advice.
+Projects (agile tracking for the group's side projects): list_projects, get_project_board, get_sprint, get_project_dailies to read; add_project_tasks to break work into tasks or plan a sprint.
 get_my_body_stats reads the user's own weekly weight/height/waist/body-fat check-ins (private, read-only) so you can size meal plans; never share them.
 Write content in the language the user asks for (often Thai).`;
 
@@ -101,6 +103,11 @@ export const TOOLS = [
   { name: 'update_routine_item', title: 'Update one of my exercises/meals', description: 'Replace an exercise or meal the user created.', inputSchema: { type: 'object', properties: { item_id: { type: 'integer' }, item: { type: 'object', additionalProperties: true } }, required: ['item_id', 'item'] }, annotations: { readOnlyHint: false, destructiveHint: true } },
   { name: 'update_routine_plan', title: 'Update one of my plans', description: 'Replace a plan the user created (title, description, entries). Items must already exist.', inputSchema: { type: 'object', properties: { plan_id: { type: 'integer' }, plan: { type: 'object', additionalProperties: true } }, required: ['plan_id', 'plan'] }, annotations: { readOnlyHint: false, destructiveHint: true } },
   { name: 'get_my_body_stats', title: 'Read my body stats', description: "The signed-in user's own weekly check-ins (weight, height, waist, body fat), goal weight and trend. Private to the user; read-only.", inputSchema: noArgs, annotations: { readOnlyHint: true } },
+  { name: 'list_projects', title: 'List my projects', description: 'Projects the user is a member of, with the current sprint, task counts and members (ids for assignees).', inputSchema: noArgs, annotations: { readOnlyHint: true } },
+  { name: 'get_project_board', title: 'Read a project board', description: 'All tasks of a project (backlog = sprintNo null), its versions and the current sprint.', inputSchema: { type: 'object', properties: { project_id: { type: 'integer' } }, required: ['project_id'] }, annotations: { readOnlyHint: true } },
+  { name: 'get_sprint', title: 'Read a sprint summary', description: 'Planned vs done per person, load votes (over/ok/under) and notes for a sprint, plus next sprint capacity. sprint = number or "current".', inputSchema: { type: 'object', properties: { project_id: { type: 'integer' }, sprint: { type: ['integer', 'string'] } }, required: ['project_id'] }, annotations: { readOnlyHint: true } },
+  { name: 'get_project_dailies', title: 'Read daily check-ins', description: 'Daily check-ins (last round / this round / blockers) of the last 14 days.', inputSchema: { type: 'object', properties: { project_id: { type: 'integer' } }, required: ['project_id'] }, annotations: { readOnlyHint: true } },
+  { name: 'add_project_tasks', title: 'Add tasks to a project', description: 'Add tasks: [{title, description?, size? S|M|L, assigneeId? (member user id), sprintNo? (null = backlog), versionId?}]. Use for breaking work down or planning a sprint.', inputSchema: { type: 'object', properties: { project_id: { type: 'integer' }, tasks: { type: 'array', items: { type: 'object', additionalProperties: true } } }, required: ['project_id', 'tasks'] }, annotations: { readOnlyHint: false } },
   { name: 'update_course', title: 'Update one of my courses', description: 'Replace a course the user created with new JSON. Keep lesson/exercise ids from get_course so learners keep their progress; lessons left out are removed.', inputSchema: { type: 'object', properties: { ...idArg, course: COURSE_SCHEMA }, required: ['course_id', 'course'] }, annotations: { readOnlyHint: false, destructiveHint: true } },
 ];
 
@@ -158,6 +165,19 @@ export class McpUseCase {
     };
     if (name.includes('routine')) return this.callRoutine(actor, name, a);
     if (name === 'get_my_body_stats') return new GetBodyStatsUseCase(d).execute(actor);
+    if (name === 'list_projects') return new P.ListProjectsUseCase(d).execute(actor);
+    if (name === 'get_project_board') {
+      const [board, proj] = await Promise.all([new P.ListTasksUseCase(d).execute(actor, a.project_id), new P.GetProjectUseCase(d).execute(actor, a.project_id)]);
+      return { ...board, versions: proj.versions, members: proj.members.map((m) => ({ userId: m.userId, name: m.displayName })), url: `${d.config.webUrl}/projects/${proj.project.id}` };
+    }
+    if (name === 'get_sprint') return new P.GetSprintUseCase(d).execute(actor, a.project_id, a.sprint ?? 'current');
+    if (name === 'get_project_dailies') return new P.ListDailiesUseCase(d).execute(actor, a.project_id, {});
+    if (name === 'add_project_tasks') {
+      if (!Array.isArray(a.tasks) || !a.tasks.length || a.tasks.length > 50) throw validationError('tasks must be a list of 1–50 tasks', { field: 'tasks' });
+      const out = [];
+      for (const t of a.tasks) out.push((await new P.CreateTaskUseCase(d).execute(actor, a.project_id, t as Record<string, unknown>)).task);
+      return { created: out, url: `${d.config.webUrl}/projects/${Number(a.project_id)}?tab=board` };
+    }
     switch (name) {
       case 'get_import_guide': return new GetImportGuideUseCase(d).execute();
       case 'list_course_categories':
